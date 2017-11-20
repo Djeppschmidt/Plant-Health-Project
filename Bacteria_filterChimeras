@@ -1,0 +1,34 @@
+#!/bin/bash
+
+#BATCH --job-name="DES_filterChimeras" #name of the job submitted
+
+#SBATCH -p short #name of the queue you are submitting to
+
+#SBATCH -N 1 #number of nodes in this job
+
+#SBATCH -n 20 #number of cores/tasks in job
+
+#SBATCH -t 48:00:00 #time allocated for job in hrs:min:sec
+
+#SBATCH --mail-user=djeppschmidt@gmail.com #email to get messages
+
+#SBATCH --mail-type=BEGIN,END,FAIL #send mail when job starts, ends or fails
+
+#SBATCH -o "DES_filterChimeras_stdout.%j.%N" #standard out %j adds job number, %N adds node name
+
+#SBATCH -e "DES_filterChimeras_sterr.%j.%N" #optional file for standard error
+
+#SBATCH --workdir=/project/microbial_genomes/php_output/bacteria/ #set the working directory
+date # optional prints timestamp in stdout when job starts
+
+module load qiime
+
+#align_seqs.py -i all_bacteria_seqs.fna -o pynast_aligned_bacseqs.fna
+
+#identify_chimeric_seqs.py -i all_bacteria_seqs.fna -a pynast_aligned_bacseqs.fna -m ChimeraSlayer --split_by_sampleid -o chimeras.txt --threads 1.0
+
+filter_fasta.py -f all_bacteria_seqs.fna -o OTU_pick_nochimera072817/filter_Chimeras/all_bact_noChimeras_DES082117.fna -a OTU_pick_nochimera072817/filter_Chimeras/raw_bact_denovo_chimeras.fna -n
+
+date #optional prints timestamp when the job ends to standard out
+
+#End of file
