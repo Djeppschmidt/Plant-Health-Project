@@ -1,0 +1,220 @@
+sink("Community_analysis_output_date.txt", append=TRUE)
+
+library(phyloseq)
+
+dat=import_biom("OTU_pick_nochimera072817/OTU_Pick082017/otu_table_mc2_tax_metadata.biom")
+
+colnames(tax_table(data)) <- c("Kingdom", "Phylum", "Class", "Order", "Family", "Genus", "Species")
+###subset dat to make protect medium data
+dat2=prune_samples(sample_sums(dat)>=7000, dat) 
+dat3=prune_samples(sample_sums(dat)>70000, dat)
+
+###rarefaction
+
+rarefied=rarefy_even_depth(dat3, sample.size=70000, verbose=FALSE, replace=FALSE)
+
+#combine for final dataset
+
+data=merge_phyloseq(dat2, rarefied)
+
+###start evaluation
+
+#global model
+
+richness<-estimate_richness(data, measures="Observed")
+r2<-richness$Observed
+
+glmfit.global<-glm(richness~Glyphosate_Treatment+System+Crop+Soil_Zone, data)
+summary(aov(glmfit.global))
+glmfit.global
+
+
+#subset data into the different comparisons
+#soy<-subset_samples(data, Crop=="Soy")
+
+
+#corn<-subset_samples(data, Crop=="Corn")
+
+
+#NT<-subset_samples(data, System=="NT")
+
+
+#CT<-subset_samples(data, System=="CT")
+
+
+#Org3<-subset_samples(data, System=="Org_3")
+
+
+#Org6<-subset_samples(data, System=="Org_6")
+
+
+#TRT<-subset_samples(data, Glyphosate_Treatment=="spray")
+
+
+#uTRT<-subset_samples(data, Glyphosate_Treatment=="no_spray")
+
+
+#Bulk<-subset_samples(data, Soil_Zone=="Bulk")
+
+
+#RHI<-subset_samples(data, Soil_Zone=="Rhizosphere")
+
+
+
+#calculate richness and abundance values, then fit for corn
+#rcorn<-estimate_richness(rcorn, measures="Observed")
+#r2corn<-rcorn$Observed
+
+
+#dcorn<-sample_sums(corn)
+
+#divcorn<-data.frame(dcorn, r2corn)
+
+#nls_fitcorn <- nls(r2corn ~ a*dcorn^(b), divcorn, start = list(a = 16.5, b = 0.3))
+#nls_fitcorn
+#summary(nls_fit)
+
+#calculate richness and abundance values, then fit for soy
+
+#rsoy<-estimate_richness(rsoy, measures="Observed")
+#r2soy<-rsoy$Observed
+
+#dsoy<-sample_sums(soy)
+
+#divsoy<-data.frame(dsoy, r2soy)
+
+#nls_fitsoy <- nls(r2soy ~ a*dsoy^(b), divsoy, start = list(a = 16.5, b = 0.3))
+#nls_fitsoy
+#summary(nls_fit)
+
+#nls_fitsoy1 <- nls(r2soy ~ a+c*dsoy^(b), divsoy, start = list(a = 0.1, c=16.5, b = 0.3))
+#nls_fitsoy1
+#summary(nls_fitsoy1)
+
+
+#calculate richness and abundance values, then fit for NT
+
+#fit for NT
+#dNT<-sample_sums(NT)
+#rNT<-estimate_richness(NT, measures="Observed")
+#r2NT<-rNT$Observed
+#divNT<-data.frame(dNT,r2NT)
+
+
+#make model
+#nls_fitNT <- nls(r2NT ~ a*dNT^(b), divNT, start = list(a = 16.5, b = 0.3))
+#nls_fitNT
+#summary(nls_fitNT)
+
+#calculate richness and abundance values, then fit for CT
+
+#fit for CT
+
+#dCT<-sample_sums(CT)
+#rCT<-estimate_richness(CT, measures="Observed")
+#r2CT<-rCT$Observed
+#divCT<-data.frame(dCT,r2CT)
+
+#make model
+#nls_fitCT <- nls(r2CT ~ a*dCT^(b), divCT, start = list(a = 16.5, b = 0.3))
+#nls_fitCT
+#summary(nls_fitCT)
+
+#calculate richness and abundance values, then fit for ORG3
+
+#fit for Org3
+
+#dOrg3<-sample_sums(Org3)
+#rOrg3<-estimate_richness(Org3, measures="Observed")
+#r2Org3<-rOrg3$Observed
+#divOrg3<-data.frame(dOrg3,r2Org3)
+
+
+
+#make model
+#nls_fitOrg3 <- nls(r2Org3 ~ a*dOrg3^(b), divOrg3, start = list(a = 16.5, b = 0.3))
+#nls_fitOrg3
+#summary(nls_fitOrg3)
+
+
+#calculate richness and abundance values, then fit for ORG6
+
+#fit for Org6
+#dOrg6<-sample_sums(Org6)
+#rOrg6<-estimate_richness(Org6, measures="Observed")
+#r2Org6<-rOrg3$Observed
+#divOrg6<-data.frame(dOrg6,r2Org6)
+
+
+#make model
+#nls_fitOrg6 <- nls(r2Org6 ~ a*dOrg6^(b), divOrg6, start = list(a = 16.5, b = 0.3))
+#nls_fitOrg6
+#summary(nls_fitOrg6)
+
+#calculate richness and abundance values, then fit for TRT
+
+#fit for treated
+#dTRT<-sample_sums(TRT)
+#rTRT<-estimate_richness(TRT, measures="Observed")
+#r2TRT<-rTRT$Observed
+#divTRT<-data.frame(dTRT,r2TRT)
+#plot data
+
+#make model
+#nls_fitTRT <- nls(r2TRT ~ a*dTRT^(b), divTRT, start = list(a = 16.5, b = 0.3))
+#nls_fitTRT
+#summary(nls_fitTRT)
+
+#calculate richness and abundance values, then fit for uTRT
+
+#fit for untreated
+
+#duTRT<-sample_sums(uTRT)
+#ruTRT<-estimate_richness(uTRT, measures="Observed")
+#r2uTRT<-ruTRT$Observed
+#divTRT<-data.frame(duTRT,r2uTRT)
+
+
+#make model
+#nls_fituTRT <- nls(r2uTRT ~ a*duTRT^(b), divuTRT, start = list(a = 16.5, b = 0.3))
+#nls_fituTRT
+#summary(nls_fituTRT)
+
+
+
+#calculate richness and abundance values, then fit for Bulk
+#fit for Bulk
+
+#dBulk<-sample_sums(Bulk)
+#rBulk<-estimate_richness(Bulk, measures="Observed")
+#r2Bulk<-rBulk$Observed
+#divBulk<-data.frame(dBulk,r2Bulk)
+
+#plot data
+
+#make model
+#nls_fitBulk <- nls(r2Bulk ~ a*dBulk^(b), divBulk, start = list(a = 16.5, b = 0.3))
+#nls_fitBulk
+#summary(nls_fitBulk)
+
+
+#calculate richness and abundance values, then fit for RHI
+
+#fit for Rhizosphere
+
+
+#dRHI<-sample_sums(RHI)
+#rRHI<-estimate_richness(RHI, measures="Observed")
+#r2RHI<-rRHI$Observed
+#divRHI<-data.frame(dRHI,r2RHI)
+
+#plot data
+
+#make model
+#nls_fitRHI <- nls(r2RHI ~ a*dRHI^(b), divRHI, start = list(a = 16.5, b = 0.3))
+#nls_fitRHI
+#summary(nls_fitRHI)
+
+dev.off()
+
+q()
