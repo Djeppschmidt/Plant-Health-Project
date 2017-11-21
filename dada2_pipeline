@@ -1,0 +1,182 @@
+#Proceedure following : https://benjjneb.github.io/dada2/tutorial.html
+
+#load library
+
+library(dada2)
+
+path<-"~/MiSeq_SOP" #Change to directory- this makes an object with all files from the directory
+
+#view all files in "path"
+list.files(path)
+
+#filter and sort forward and reverse reads; MAKE SURE NAME CONVENTION MATCHES (it should)
+
+fnFs<-sort(list.files(path, pattern="_R1_001.fastq", full.names=TRUE)) #forward reads
+fnRs<-sort(list.files(path, pattern="_R2_001.fastq", full.names=TRUE)) #reverse reads
+
+#extract sample names
+
+sample.names<-sapply(strsplit(basename(fnFs), "_"), '[',1)
+
+
+#plot quality profiles
+
+#pdf(forward)
+plotQualityProfile(fnFs)
+#dev.off()
+
+#pdf(reverse)
+
+plotQualityProfile(fnRs)
+#dev.off()
+
+#assign file names for the filtered files
+filt_path <- file.path(path, "filtered") # Place filtered files in filtered/ subdirectory
+filtFs <- file.path(filt_path, paste0(sample.names, "_F_filt.fastq.gz"))
+filtRs <- file.path(filt_path, paste0(sample.names, "_R_filt.fastq.gz"))
+
+#sink(output, append=TRUE)
+
+out <- filterAndTrim(fnFs, filtFs, fnRs, filtRs, trimLeft=20,
+              maxN=0, maxEE=c(2,2), truncQ=2, rm.phix=TRUE,
+              compress=TRUE, multithread=TRUE) #trimLeft removes primers; talk with ryan about length of primers still in sequences
+out
+
+#dev.off()
+
+#determine error rates
+
+errF<-learnErrors(filtFs, multithread=TRUE)
+errR<-learnErrors(filtRs, multithread=TRUE)
+
+#pdf(Ferrorplots.pdf, append=TRUE) #set to your output directory
+
+plotErrors(errF, nominalQ=TRUE)
+
+#dev.off()
+
+#pdf(Rerrorplots.pdf, append=TRUE) #set to your output directory
+
+plotErrors(errR, nominalQ=TRUE)
+
+#dev.off()
+
+#Dereplication: see tutorial/this note: "If using this workflow on your own data: The tutorial dataset is small enough to easily load into memory. If your dataset exceeds available RAM, it is preferable to process samples one-by-one in a streaming fashion: see the DADA2 Workflow on Big Data for an example."
+##########
+#example one-by-one streaming fashion:
+#dds <- vector("list", length(sample.names))
+#names(dds) <- sample.names
+#for(sam in sample.names) {
+#  cat("Processing:", sam, "\n")
+#  derep <- derepFastq(filts[[sam]])
+#  dds[[sam]] <- dada(derep, err=err, multithread=TRUE)
+#}
+# Construct sequence table and write to disk
+#seqtab <- makeSequenceTable(dds)
+#saveRDS(seqtab, "/path/to/run1/output/seqtab.rds") # CHANGE ME to where you want sequence table saved
+##########
+
+
+#Dereplication
+
+#sink(derepF_log.txt, append=TRUE) #set to your output directory
+derepFs <- derepFastq(filtFs, verbose=TRUE)
+#dev.off()
+
+
+#sink(derepR_log.txt, append=TRUE) #set to your output directory
+derepRs <- derepFastq(filtRs, verbose=TRUE)
+#dev.off()
+
+# Name the derep-class objects by the sample names
+names(derepFs) <- sample.names
+names(derepRs) <- sample.names
+
+#infer sequence variants
+dadaFs <- dada(derepFs, err=errF, multithread=TRUE)
+dadaRs <- dada(derepRs, err=errR, multithread=TRUE)
+
+#see these comments if you run into issues, and refer back to https://benjjneb.github.io/dada2/bigdata.html for the big data version
+
+#If using this workflow on your own data: All samples are simultaneously loaded into memory in the tutorial. If you are dealing with datasets that approach or exceed available RAM, it is preferable to process samples one-by-one in a streaming fashion: see the DADA2 Workflow on Big Data for an example.
+
+#If using this workflow on your own data: By default, the dada function processes each sample independently, but pooled processing is available with pool=TRUE and that may give better results for low sampling depths at the cost of increased computation time. See our discussion about pooling samples for sample inference.
+
+#If using this workflow on your own data: DADA2 also supports 454 and Ion Torrent data, but we recommend some minor parameter changes for those sequencing technologies. The adventurous can explore ?setDadaOpt for other adjustable algorithm parameters.
+ 
+
+#merge paired reads
+#sink(mergpairedendslog.txt, append=TRUE)#set to output directory
+mergers <- mergePairs(dadaFs, derepFs, dadaRs, derepRs, verbose=TRUE)
+
+#head(mergers[1]) #inpect sample 1 mergers. see note: "Most of your reads should successfully merge. If that is not the case upstream parameters may need to be revisited: Did you trim away the overlap between your reads?"
+ 
+#make sequence table
+seqtab <- makeSequenceTable(mergers)
+#sink(seqtablelog.txt, append=TRUE)#set to output directory
+dim(seqtab)
+table(nchar(getSequences(seqtab)))
+#dev.off()
+
+
+#remove chimeras
+
+seqtab.nochim <- removeBimeraDenovo(seqtab, method="consensus", multithread=TRUE, verbose=TRUE)
+#sink(chimeralog.txt, append=TRUE)#set to output directory
+dim(seqtab.nochim)
+
+sum(seqtab.nochim)/sum(seqtab)
+#dev.off()
+
+#see note: "Most of your reads should remain after chimera removal (it is not uncommon for a majority of sequence variants to be removed though). If most of your reads were removed as chimeric, upstream processing may need to be revisited. In almost all cases this is caused by primer sequences with ambiguous nucleotides that were not removed prior to beginning the DADA2 pipeline."
+
+#track reads through pipeline
+getN <- function(x) sum(getUniques(x))
+track <- cbind(out, sapply(dadaFs, getN), sapply(mergers, getN), rowSums(seqtab), rowSums(seqtab.nochim))
+# If processing a single sample, remove the sapply calls: e.g. replace sapply(dadaFs, getN) with getN(dadaFs)
+colnames(track) <- c("input", "filtered", "denoised", "merged", "tabled", "nonchim")
+rownames(track) <- sample.names
+
+#sink(pipeline_filteringQCtable.txt, append=TRUE) #look at this file before proceeding to make sure no sample has had the majority of the sequences removed. If they have, then there is probably something wrong with the step in which that happened.
+track
+#dev.off()
+
+
+#Assign taxonomy
+
+#
+
+taxa <- assignTaxonomy(seqtab.nochim, "Training/silva_nr_v128_train_set.fa.gz", multithread=TRUE) #may use any downloaded database as the reference database. Can easily use greengenes for bac, and unite for ITS. Just replace the path and file within "..."
+
+taxa.print <- taxa # Removing sequence rownames for display only
+rownames(taxa.print) <- NULL
+
+#sink(taxonomy_assignmentsCheck.txt, append=TRUE)
+#taxa.print
+head(taxa.print)
+#dev.off()
+
+#see note: If your reads do not seem to be appropriately assigned, for example lots of your bacterial 16S sequences are being assigned as Eukaryota NA NA NA NA NA, your reads may be in the opposite orientation as the reference database. Tell dada2 to try the reverse-complement orientation with assignTaxonomy(..., tryRC=TRUE) and see if this fixes the assignments.
+ 
+
+#import into phyloseq
+
+library(phyloseq); packageVersion("phyloseq")
+
+library(ggplot2); packageVersion("ggplot2")
+
+#import sample data
+
+metadata<-read.csv(Pathtomappingfile.csv)
+samdf<-as.matrix(metadata)
+
+
+#construct a phyloseq object fro dada2 outputs
+
+ps <- phyloseq(otu_table(seqtab.nochim, taxa_are_rows=FALSE), 
+               sample_data(samdf), 
+               tax_table(taxa))
+
+ps
+
+#DO PHYLOSEQ MAGIC!!
