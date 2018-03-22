@@ -21,21 +21,29 @@ head(sampleDat) #check import
 
 com.Dat<-readRDS("allseq_nochim.rds")
 dim(com.Dat) #check import
+com.Dat<-otu_table(com.Dat)
+#first rarefy the community data!!
 
 tax<-readRDS("tax_training.rds") # import tax assingments
 dim(tax) #check import
 tax<-tax_table(tax)
  #name QPCR correction factor to be applied to sequence counts
 
-com.Dat<-as.data.frame(com.Dat) #prepare sequence counts for transformation
-com.Dat[1:3,1:3]
+ps<-merge_phyloseq(com.Dat, sampleDat, tax)
 
-sampleDat[sampleDat$Correction==NA]<-1
+#run this after making phyloseq object
+com.rare<-rarefy_even_depth(ps, sample.size = 20000, rngseed = FALSE, replace = FALSE, trimOTUs = TRUE, verbose = TRUE)
+
+
+ #name QPCR correction factor to be applied to sequence counts
+rare.OTU<-as.data.frame(as.matrix(otu_table(com.Dat))) #prepare sequence counts for transformation
+rare.OTU[1:3,1:3]
+
 
 #adj.comDat<-com.Dat*sampleDat$Correction #do transformation/ test case not working
-adj.comDat<-com.Dat*c.factor
+adj.rareCom<-rare.OTU*c.factor
 
-head(adj.comDat[1:3,1:3]) #visually chech transformation
+head(adj.rareCom[1:3,1:3]) #visually check transformation
 
 adj.comDat<-round(adj.comDat) #get rid of decimals/ convert to count data again
 
