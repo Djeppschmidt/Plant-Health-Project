@@ -64,3 +64,13 @@ otu_table(PSadj.comDat)<-adj.rareCom
 otu_table(PSadj.comDat)[1:3,1:3]#check that OTU table was added correctly
 
 saveRDS(PSadj.comDat, "QPCR_Corrected_totalPS.rds")
+
+
+#split into bac vs arch
+Arc<-subset_taxa(PSadj.comDat, Kingdom=="Archaea")
+Bac<-subset_taxa(PSadj.comDat, Kingdom=="Bacteria")
+
+saveRDS(Arc, "ArchaealComTest.rds")
+saveRDS(Bac, "BacterialComTest.rds")
+
+#split by site location
