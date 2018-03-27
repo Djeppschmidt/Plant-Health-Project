@@ -67,8 +67,9 @@ saveRDS(PSadj.comDat, "QPCR_Corrected_totalPS.rds")
 
 
 #split into bac vs arch
-Arc<-subset_taxa(PSadj.comDat, Kingdom=="Archaea")
-Bac<-subset_taxa(PSadj.comDat, Kingdom=="Bacteria")
+#com<-readRDS("QPCR_Corrected_totalPS.rds")
+Arc<-subset_taxa(com, Kingdom=="Archaea")
+Bac<-subset_taxa(com, Kingdom=="Bacteria")
 
 saveRDS(Arc, "ArchaealComTest.rds")
 saveRDS(Bac, "BacterialComTest.rds")
