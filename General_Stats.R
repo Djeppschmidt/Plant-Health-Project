@@ -34,6 +34,9 @@ find.top.taxa <- function(x,taxa){
   m[,taxa] <- n
   return(m)
 }
+#use this object to do variance decomposition
+maxabund<-find.top.taxa(rare.com, "Genus")
+
 
 #bray-curtis distance matrix for the general dataset
 
