@@ -12,7 +12,7 @@ set.seed(397652)
 library(phyloseq)
 ### CHECK FIRST IMPORT STEP!! SOMETHING WRONG WHEN MULTIPLYING!!! ### <- this is because urbana is missing sample names!! ugh!
 ##I think this ^ is resolved...
-sampleDat<-as.data.frame(read.csv("Master_SampleData_Table_PHPv3_2.csv", stringsAsFactors=FALSE))
+sampleDat<-as.data.frame(read.csv("sequence_variants2/Master_SampleData_Table_PHPv3_2.csv", stringsAsFactors=FALSE))
 #c.factor<-as.numeric(sampleDat$Correction) # needs to happen after rarefaction
 #c.factor[c.factor==NA]<-1
 rownames(sampleDat)<-sampleDat$X.SampleID
@@ -20,18 +20,22 @@ sampleDat<-sample_data(sampleDat)
 
 head(sampleDat) #check import
 
-com.Dat<-readRDS("allseq_nochim.rds")
+com.Dat<-readRDS("sequence_variants2/allseq_nochim.rds")
 dim(com.Dat) #check import
-com.Dat<-otu_table(com.Dat)
+com.Dat<-otu_table(com.Dat, taxa_are_rows=FALSE)
 #first rarefy the community data!!
+#rarefy by community abundance (QPCR)-> new correction method!
 
-tax<-readRDS("tax_training.rds") # import tax assingments
+#
+
+#forget this for the first paper!! Normalization won't change the large-scale trends
+tax<-readRDS("sequence_variants2/tax_training.rds") # import tax assingments
 dim(tax) #check import
 tax<-tax_table(tax)
  #name QPCR correction factor to be applied to sequence counts
 
 ps<-merge_phyloseq(com.Dat, sampleDat, tax)
-
+saveRDS(ps, "bacarc_RAWcomDat.rds")
 #run this after making phyloseq object
 com.rare<-rarefy_even_depth(ps, sample.size = 20000, rngseed = FALSE, replace = FALSE, trimOTUs = TRUE, verbose = TRUE)
 
@@ -71,7 +75,21 @@ saveRDS(PSadj.comDat, "QPCR_Corrected_totalPS.rds")
 Arc<-subset_taxa(com, Kingdom=="Archaea")
 Bac<-subset_taxa(com, Kingdom=="Bacteria")
 
+
+
 saveRDS(Arc, "ArchaealComTest.rds")
 saveRDS(Bac, "BacterialComTest.rds")
 
-#split by site location
+#split by site location and crop
+belt_corn<-prune_taxa()
+saveRDS(, "belt_cornPS.rds")
+belt_soy<-prune_taxa( ,)
+saveRDS("belt_soyPS.rds")
+urb_corn<-prune_taxa(,)
+saveRDS("urb_cornPS.rds")
+urb_soy<-prune_taxa(,)
+saveRDS("urb_soyPS.rds")
+stone_corn<-prune_taxa(,)
+saveRDS("stone_cornPS.rds")
+stone_soy<-prune_taxa(, )
+saveRDS("stone_soyPS.rds")
