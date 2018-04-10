@@ -15,6 +15,7 @@ S<-specnumber(otu_table(rare.com))
 H<-diversity(otu_table(rare.com))
 evenness<-H/log(S)
 
+#regress data?
 
 #source: https://github.com/joey711/phyloseq/issues/848
 find.top.taxa <- function(x,taxa){
@@ -36,6 +37,10 @@ find.top.taxa <- function(x,taxa){
 }
 #use this object to do variance decomposition
 maxabund<-find.top.taxa(rare.com, "Genus")
+
+library(nlme)
+
+lme(otu~...)
 
 
 #bray-curtis distance matrix for the general dataset
