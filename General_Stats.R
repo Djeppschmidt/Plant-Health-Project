@@ -41,7 +41,9 @@ maxabund<-find.top.taxa(rare.com, "Genus")
 library(nlme)
 
 lme(otu~...)
-
+for(i in maxabund){
+  a<-nlme(otu_table(rare.com)$i~model)
+  a}
 
 #bray-curtis distance matrix for the general dataset
 
