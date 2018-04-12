@@ -21,8 +21,28 @@ divdf<-data.frame(richness, S, H, evenness)
 head(divdf)
 
 with(divdf, plot(evenness~richness$Observed))
-#regress data?
+with(divdf, boxplot(richness$Observed~System.loc, par(las=2), main="Richness"))
+with(divdf, boxplot(evenness~System.loc, par(las=2), main="Evenness"))
+with(divdf, boxplot(evenness~Glyphosphate_Treatment+System.loc, par(las=2), main="Evenness"))
+with(divdf, boxplot(richness$Observed~Glyphosphate_Treatment+System.loc, par(las=2), cex.axis=0.5 ,main="Richness"))
+with(divdf, boxplot(evenness~Glyphosphate_Treatment+System.loc, par(las=2), cex.axis=0.5 ,main="Evenness"))
 
+
+
+with(divdf, summary(aov(richness$Observed~Glyphosphate_Treatment+System.loc)))
+
+with(divdf, summary(aov(richness$Observed~Loc_plot_ID*System.loc/Sampling_date+Glyphosphate_Treatment)))
+#this gives significant Glhyphosphate treatment to Richenss ->
+with(divdf, summary(aov(richness$Observed~System.loc/Sampling_date+Glyphosphate_Treatment)))
+with(divdf, summary(aov(evenness~System.loc/Sampling_date+Glyphosphate_Treatment)))
+
+
+#with(divdf, summary(aov(richness$Observed~System.loc/Sampling_date/Glyphosphate_Treatment)))
+
+?boxplot
+
+#regress data?
+plot(divdf$S~System.loc)
 #source: https://github.com/joey711/phyloseq/issues/848
 find.top.taxa <- function(x,taxa){
   require(phyloseq)
