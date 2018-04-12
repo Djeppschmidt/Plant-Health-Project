@@ -28,6 +28,8 @@ with(divdf, boxplot(richness$Observed~Glyphosphate_Treatment+System.loc, par(las
 with(divdf, boxplot(evenness~Glyphosphate_Treatment+System.loc, par(las=2), cex.axis=0.5 ,main="Evenness"))
 
 
+# aov expects a balanced design, which this is certainly not!!
+#will need to rerun as lme in nlme!!
 
 with(divdf, summary(aov(richness$Observed~Glyphosphate_Treatment+System.loc)))
 
@@ -36,6 +38,10 @@ with(divdf, summary(aov(richness$Observed~Loc_plot_ID*System.loc/Sampling_date+G
 with(divdf, summary(aov(richness$Observed~System.loc/Sampling_date+Glyphosphate_Treatment)))
 with(divdf, summary(aov(evenness~System.loc/Sampling_date+Glyphosphate_Treatment)))
 
+#control for year
+with(divdf, summary(aov(richness$Observed~(System.loc/Sampling_date+Glyphosphate_Treatment)%in%year)))
+with(divdf, summary(aov(evenness~(System.loc/Sampling_date+Glyphosphate_Treatment)%in%year)))
+?aov
 
 #with(divdf, summary(aov(richness$Observed~System.loc/Sampling_date/Glyphosphate_Treatment)))
 
