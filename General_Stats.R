@@ -210,7 +210,67 @@ Stone.C.Even<-Stone.C.Hval/log(Stone.C.Sval)
 Stone.S.Sval<-specnumber(otu_table(Stone.S))
 Stone.S.Hval<-diversity(otu_table(Stone.S))
 Stone.S.Even<-Stone.S.Hval/log(Stone.S.Sval)
-  
+
+#add richness and evenness to sample data
+sample_data(urbana)$richness<-Urb.C.rich
+sample_data(urbana)$evenness<-Urb.C.Even
+sample_data(urbana)$richness
+sample_data(Belt.C)$richness<-Belt.C.rich
+sample_data(Belt.C)$evenness<-Belt.C.Even
+
+sample_data(Belt.S)$richness<-Belt.S.rich
+sample_data(Belt.S)$evenness<-Belt.S.Even
+
+sample_data(Stone.C)$richness<-Stone.C.rich
+sample_data(Stone.C)$evenness<-Stone.C.Even
+
+sample_data(Stone.S)$richness<-Stone.S.rich
+sample_data(Stone.S)$evenness<-Stone.S.Even
+head(sample_data(Stone.S))
+
+#remove  undetermined from the plot
+urbana_test<-prune_samples(sample_data(urbana)$Glyphosphate_Treatment!="undetermined", urbana)
+table(sample_data(urbana_test)$Glyphosphate_Treatment) 
+
+Belt.C<-prune_samples(sample_data(Belt.C)$Glyphosphate_Treatment!="undetermined", Belt.C)
+Belt.S<-prune_samples(sample_data(Belt.S)$Glyphosphate_Treatment!="undetermined", Belt.S)
+
+Stone.C<-prune_samples(sample_data(Stone.C)$Glyphosphate_Treatment!="undetermined", Stone.C)
+Stone.S<-prune_samples(sample_data(Stone.S)$Glyphosphate_Treatment!="undetermined", Stone.S)
+
+table(sample_data(Stone.C)$Glyphosphate_Treatment)
+
+
+?prune_samples
+#richness plots and stats
+
+with(sample_data(urbana_test), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Urbana Corn Richness"))
+ 
+
+with(sample_data(Belt.C), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Corn Richness"))
+
+
+with(sample_data(Belt.S), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Soy Richness"))
+
+
+with(sample_data(Stone.C), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Corn Richness"))
+
+with(sample_data(Stone.S), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Soy Richness"))
+
+####
+with(sample_data(urbana_test), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Urbana Corn Evenness"))
+
+
+with(sample_data(Belt.C), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Corn Evenness"))
+
+
+with(sample_data(Belt.S), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Soy Evenness"))
+
+
+with(sample_data(Stone.C), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Corn Evenness"))
+
+with(sample_data(Stone.S), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Soy Evenness"))
+
 #bray-curtis distance matrix for each subset
 
 #adonis for each subset
