@@ -275,6 +275,17 @@ with(sample_data(Stone.S), boxplot(evenness~Glyphosphate_Treatment/System.loc, p
 #with(sample_data(urbana_test), lme(evenness~Glyphosphate_Treatment))
 
 #with(sample_data(Stone.C), lme(evenness~System.loc+Glyphosphate_Treatment, data=as.data.frame(as.matrix(sample_data(Stone.C)))))
+with(sample_data(urbana), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+
+
+with(sample_data(Belt.C), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Belt.S), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+
+
+with(sample_data(Stone.C), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Stone.S), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+
+
 
 with(sample_data(urbana), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
 
