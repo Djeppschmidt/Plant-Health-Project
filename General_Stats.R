@@ -244,39 +244,60 @@ table(sample_data(Stone.C)$Glyphosphate_Treatment)
 ?prune_samples
 #richness plots and stats
 
-with(sample_data(urbana_test), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Urbana Corn Richness"))
+with(sample_data(urbana_test), boxplot(richness$Observed~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Urbana Corn Richness"))
  
 
-with(sample_data(Belt.C), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Corn Richness"))
+with(sample_data(Belt.C), boxplot(richness$Observed~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Corn Richness"))
 
 
-with(sample_data(Belt.S), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Soy Richness"))
+with(sample_data(Belt.S), boxplot(richness$Observed~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Soy Richness"))
 
 
-with(sample_data(Stone.C), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Corn Richness"))
+with(sample_data(Stone.C), boxplot(richness$Observed~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Stoneville Corn Richness"))
 
-with(sample_data(Stone.S), boxplot(richness$Observed~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Soy Richness"))
+with(sample_data(Stone.S), boxplot(richness$Observed~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Stoneville Soy Richness"))
 
 ####
-with(sample_data(urbana_test), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Urbana Corn Evenness"))
+with(sample_data(urbana_test), boxplot(evenness~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Urbana Corn Evenness"))
 
 
-with(sample_data(Belt.C), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Corn Evenness"))
+with(sample_data(Belt.C), boxplot(evenness~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Corn Evenness"))
 
 
-with(sample_data(Belt.S), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Beltsville Soy Evenness"))
+with(sample_data(Belt.S), boxplot(evenness~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Soy Evenness"))
 
 
-with(sample_data(Stone.C), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Corn Evenness"))
+with(sample_data(Stone.C), boxplot(evenness~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Stoneville Corn Evenness"))
 
-with(sample_data(Stone.S), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Soy Evenness"))
+with(sample_data(Stone.S), boxplot(evenness~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Stoneville Soy Evenness"))
 
 #Stats
-with(sample_data(urbana_test), lme(evenness~Glyphosphate_Treatment))
+#with(sample_data(urbana_test), lme(evenness~Glyphosphate_Treatment))
 
-with(sample_data(Stone.C), lme(evenness~System.loc+Glyphosphate_Treatment, data=as.data.frame(as.matrix(sample_data(Stone.C)))))
+#with(sample_data(Stone.C), lme(evenness~System.loc+Glyphosphate_Treatment, data=as.data.frame(as.matrix(sample_data(Stone.C)))))
 
-aov
+with(sample_data(urbana), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
+
+
+with(sample_data(Belt.C), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Belt.S), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
+
+
+with(sample_data(Stone.C), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Stone.S), summary(aov(evenness~System.loc+Glyphosphate_Treatment)))
+
+## what's next? QPCR
+with(sample_data(Belt.C), boxplot(as.numeric(Quantity..picograms.)~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Corn QPCR"))
+with(sample_data(Belt.S), boxplot(as.numeric(Quantity..picograms.)~Glyphosphate_Treatment/System.loc, par(las=2), cex.axis=0.5, main="Beltsville Soy QPCR"))
+
+with(sample_data(Belt.C), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Belt.S), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
+
+with(sample_data(Stone.C), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
+with(sample_data(Stone.S), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
+
+with(sample_data(urbana), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
+
 
 ?lme
 #bray-curtis distance matrix for each subset
