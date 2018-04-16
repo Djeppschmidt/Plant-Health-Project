@@ -271,6 +271,14 @@ with(sample_data(Stone.C), boxplot(evenness~System.loc+Glyphosphate_Treatment, p
 
 with(sample_data(Stone.S), boxplot(evenness~System.loc+Glyphosphate_Treatment, par(las=2), cex.axis=0.5, main="Stoneville Soy Evenness"))
 
+#Stats
+with(sample_data(urbana_test), lme(evenness~Glyphosphate_Treatment))
+
+with(sample_data(Stone.C), lme(evenness~System.loc+Glyphosphate_Treatment, data=as.data.frame(as.matrix(sample_data(Stone.C)))))
+
+aov
+
+?lme
 #bray-curtis distance matrix for each subset
 
 #adonis for each subset
