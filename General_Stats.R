@@ -20,7 +20,9 @@ evenness<-H/log(S)
 divdf<-data.frame(richness, S, H, evenness)
 head(divdf)
 
-with(divdf, plot(evenness~richness$Observed))
+with(divdf, plot(evenness~richness$Observed), col=as.factor(sample_data(rare.com)$Quantity..picograms))
+
+sample_data(rare.com)$Quantity..picograms
 with(divdf, boxplot(richness$Observed~System.loc, par(las=2), main="Richness"))
 with(divdf, boxplot(evenness~System.loc, par(las=2), main="Evenness"))
 with(divdf, boxplot(evenness~Glyphosphate_Treatment+System.loc, par(las=2), main="Evenness"))
@@ -44,6 +46,9 @@ with(divdf, summary(aov(evenness~(System.loc/Sampling_date+Glyphosphate_Treatmen
 ?aov
 
 #with(divdf, summary(aov(richness$Observed~System.loc/Sampling_date/Glyphosphate_Treatment)))
+#lme tests
+?lme
+#model -> ~ fixed + effects + (1|random) + (|effects)
 
 ?boxplot
 
@@ -123,7 +128,7 @@ perm<-adonis(bray~System.loc+Sampling_date+Glyphosphate_Treatment+Loc_plot_ID+cr
 #this one? ->
 adonis(bray~Sampling_date+Sampling_date*Glyphosphate_Treatment%in%Loc_plot_ID+System.loc, test, permutations=999, method=bray)
 
-adonis(bray~(Sampling_date+Sampling_date*Glyphosphate_Treatment)%in%Loc_plot_ID+System.loc, test, permutations=999, method=bray)
+adonis(bray~(Sampling_date+Sampling_date*Glyphosphate_Treatment)%in%(Loc_plot_ID+System.loc), test, permutations=999, method=bray)
 
 
 adonis(bray~Loc_plot_ID+System.loc, test, permutations=999, method=bray)
@@ -132,6 +137,9 @@ adonis(bray~Loc_plot_ID+System.loc+Sampling_date, test, permutations=999, method
 
 adonis(bray~System.loc+Sampling_date+Glyphosphate_Treatment+Glyphosphate_Treatment*Sampling_date
              +Loc_plot_ID+crop+Soil_Zone, test, permutations=999, method=bray)
+
+adonis(bray~System.loc+Glyphosphate_Treatment
+       +Loc_plot_ID+crop+Soil_Zone, test, strata=Sampling_date, permutations=999, method=bray)
 
 ?adonis
 #NMS ordination for general dataset
@@ -149,7 +157,60 @@ plot_ordination(rare.com, Ord1, color="crop")+geom_point(size=0.001)+theme_class
 plot_ordination(rare.com, Ord1, color="Glyphosphate_Treatment")+geom_point(size=2)+theme_classic() + scale_shape_identity()
 plot_ordination(rare.com, Ord1, color="Herbicide_History")+geom_point(size=2)+theme_classic() + scale_shape_identity()
 
+?adonis
+#make subsets
+#by place:
+?subset_samples
+head(sample_data(rare.com))
+urbana<-subset_samples(rare.com, Location=="Urbana")
+head(sample_data(urbana)$Location)
+table(sample_data(urbana)$crop)
 
+Beltsville<-subset_samples(rare.com, Location=="Beltsville")
+table(sample_data(Beltsville)$crop)#check to make sure formating is good...
+Belt.C<-subset_samples(Beltsville, crop=="corn")
+Belt.S<-subset_samples(Beltsville, crop=="soy")
+Stoneville<-subset_samples(rare.com, Location=="Stoneville")
+
+Stone.S<-subset_samples(Stoneville, crop=="soy")
+Stone.C<-subset_samples(Stoneville, crop=="corn")
+
+table(sample_data(Stone.S)$Location) #check subset
+table(sample_data(Stone.S)$crop) #check subset
+
+#calculate richness for each set
+#richness<-estimate_richness(rare.com, split=TRUE, measures= "Observed")
+#S<-specnumber(otu_table(rare.com))
+#H<-diversity(otu_table(rare.com))
+#evenness<-H/log(S)
+
+Urb.C.rich<-estimate_richness(urbana, split=TRUE, measures= "Observed")
+Belt.C.rich<-estimate_richness(Belt.C, split=TRUE, measures= "Observed")
+Belt.S.rich<-estimate_richness(Belt.S, split=TRUE, measures= "Observed")
+Stone.C.rich<-estimate_richness(Stone.C, split=TRUE, measures= "Observed")
+Stone.S.rich<-estimate_richness(Stone.S, split=TRUE, measures= "Observed")
+#calculate evenness for each set
+
+Urb.Sval<-specnumber(otu_table(urbana))
+Urb.Hval<-diversity(otu_table(urbana))
+Urb.C.Even<-Urb.Hval/log(Urb.Sval)
+
+Belt.C.Sval<-specnumber(otu_table(Belt.C))
+Belt.C.Hval<-diversity(otu_table(Belt.C))
+Belt.C.Even<-Belt.C.Hval/log(Belt.C.Sval)
+
+Belt.S.Sval<-specnumber(otu_table(Belt.S))
+Belt.S.Hval<-diversity(otu_table(Belt.S))
+Belt.S.Even<-Belt.S.Hval/log(Belt.S.Sval)
+
+Stone.C.Sval<-specnumber(otu_table(Stone.C))
+Stone.C.Hval<-diversity(otu_table(Stone.C))
+Stone.C.Even<-Stone.C.Hval/log(Stone.C.Sval)
+
+Stone.S.Sval<-specnumber(otu_table(Stone.S))
+Stone.S.Hval<-diversity(otu_table(Stone.S))
+Stone.S.Even<-Stone.S.Hval/log(Stone.S.Sval)
+  
 #bray-curtis distance matrix for each subset
 
 #adonis for each subset
