@@ -280,6 +280,7 @@ with(sample_data(urbana), summary(aov(richness$Observed~System.loc+Glyphosphate_
 
 with(sample_data(Belt.C), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
 with(sample_data(Belt.S), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
+#with(sample_data(Belt.C), summary(aov(richness$Observed~year/(System.loc+Glyphosphate_Treatment))))
 
 
 with(sample_data(Stone.C), summary(aov(richness$Observed~System.loc+Glyphosphate_Treatment)))
@@ -310,6 +311,8 @@ with(sample_data(Stone.S), summary(aov(as.numeric(Quantity..picograms.)~System.l
 with(sample_data(urbana), summary(aov(as.numeric(Quantity..picograms.)~System.loc+Glyphosphate_Treatment)))
 
 
+#error terms
+with(sample_data(Belt.C), summary(aov(richness$Observed~year/(System.loc+Glyphosphate_Treatment)+Error(factor(Sampling_date)))))
 ?lme
 #bray-curtis distance matrix for each subset
 
