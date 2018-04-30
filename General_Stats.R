@@ -16,6 +16,16 @@ saveRDS(rare.com, "~/Desktop/PhD/PHP/bacarc_RAREcomDat.rds")
 rare.com<-readRDS("~/Desktop/PhD/PHP/bacarc_RAREcomDat.rds")
 
 ###
+### Alternative Rarefaction (i.e. Jelly Bean project)
+###
+
+J.rare<-
+
+
+
+
+
+###
 ### Global Analysis
 ###
 
