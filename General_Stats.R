@@ -2,7 +2,6 @@
 #scp dietrich.schmidt@scinet-login.bioteam.net:/project/php-bacarc/new_preproc/bacarc_RAWcomDat.rds ~/Desktop/PhD/PHP/bacarc_RAWcomDat.rds
 library(phyloseq)
 bacarc<-readRDS("~/Desktop/PhD/PHP/bacarc_RAWcomDat.rds")
-#general stats
 
 ###
 ###rarefaction
@@ -15,14 +14,73 @@ rare.com<-rarefy_even_depth(bacarc, sample.size = 20000, rngseed = FALSE, replac
 saveRDS(rare.com, "~/Desktop/PhD/PHP/bacarc_RAREcomDat.rds")
 rare.com<-readRDS("~/Desktop/PhD/PHP/bacarc_RAREcomDat.rds")
 
+
 ###
-### Alternative Rarefaction (i.e. Jelly Bean project)
+###
+### Alternative rarefaction- QPCR normalized
+###
 ###
 
-J.rare<-
+###
+### SCRATCH SPACE
+###
+
+head(sample_data(bacarc))
+
+length(adj.factor)
+head(adj.factor)
+
+count(QPCR, value="NA")
+count(sample_data(bacarc)$Quantity..picograms, value="No Ct")
+bacprune<-prune_samples(sample_data(bacarc)$Quantity..picograms!="No Ct", bacarc)
+?prune_samples
+
+##
+##
+######### END  ##########
+##
+##
+
+# define adjustfactor
+QPCR<-as.numeric(sample_data(bacprune)$Quantity..picograms)
+
+adj.factor<-(sum(QPCR))/length(QPCR)/QPCR
+
+adj.factor<-adj.factor*15000
+
+rrarefy2<-
+  function (x, sample, replace)   {
+    if (!identical(all.equal(x, round(x)), TRUE))
+      stop("function is meaningful only for integers (counts)")
+    x <- as.matrix(x)
+    if (ncol(x) == 1)
+      x <- t(x)
+    if (length(sample) > 1 && length(sample) != nrow(x))
+      stop(gettextf("length of 'sample' and number of rows of 'x' do not match"))
+    sample <- rep(sample, length = nrow(x))
+    colnames(x) <- colnames(x, do.NULL = FALSE)
+    nm <- colnames(x)
+    if (any(rowSums(x) < sample))
+      warning("Some row sums < 'sample' and are not rarefied")
+    for (i in 1:nrow(x)) {
+      if (sum(x[i, ]) <= sample[i])
+        next
+      row <- sample(rep(nm, times = x[i, ]), sample[i], replace)
+      row <- table(row)
+      ind <- names(row)
+      x[i, ] <- 0
+      x[i, ind] <- row
+    }
+    x
+  }
 
 
+Q.rare1<-rrarefy2(otu_table(bacprune), adj.factor, replace = FALSE)
+Q.rare<-bacprune
 
+otu_table(Q.rare)<-otu_table(Q.rare1, taxa_are_rows=FALSE)
+saveRDS(Q.rare, "~/Desktop/PhD/PHP/bacarc_Qrare.rds")
+#Q.rare<-readRDS("~/Desktop/PhD/PHP/bacarc_Qrare.rds")
 
 
 ###
@@ -116,16 +174,24 @@ ddsRare = phyloseq_to_deseq2(rare.com, ~System.loc/Sampling_date) #update model.
 geoMeans = apply(counts(ddsRare), 1, gm_mean)
 
 ddsRare = estimateSizeFactors(ddsRare2, geoMeans = geoMeans)
-ddsRare = DESeq(ddsRare, fitType="local")
+vst=estimateDispersions()
 
-plotPCA(vsd, intgroup=c("condition", "type"))
+ddsvst=getVarianceStabilizedData()
+
+plotPCA(vst, intgroup=c("condition", "type"))
+#make phyloseq object with variance stabilized stuff... 
+
 
 ###
-### make subsets
-##
+###
+### make subsets  ####
+###
+###
+
 
 #by place:
 ?subset_samples
+
 head(sample_data(rare.com))
 urbana<-subset_samples(rare.com, Location=="Urbana")
 head(sample_data(urbana)$Location)
@@ -135,8 +201,12 @@ Beltsville<-subset_samples(rare.com, Location=="Beltsville")
 table(sample_data(Beltsville)$crop)#check to make sure formating is good...
 Belt.C<-subset_samples(Beltsville, crop=="corn")
 Belt.S<-subset_samples(Beltsville, crop=="soy")
-Stoneville<-subset_samples(rare.com, Location=="Stoneville")
 
+head(sample_data(Belt.C))
+Belt.C<-subset_samples(Belt.C, Glyphosphate_Treatment!="undetermined")
+Belt.S<-subset_samples(Belt.S, Glyphosphate_Treatment!="undetermined")
+
+Stoneville<-subset_samples(rare.com, Location=="Stoneville")
 Stone.S<-subset_samples(Stoneville, crop=="soy")
 Stone.C<-subset_samples(Stoneville, crop=="corn")
 
@@ -310,3 +380,8 @@ with(sample_data(Belt.C), summary(aov(richness$Observed~year/(System.loc+Glyphos
 #adonis for each subset
 
 #NMS ordination for each subset
+
+
+
+
+
