@@ -38,7 +38,7 @@ test.P<-NULL
 test2 <- permanova(sv.RRsoy, n=5, indics)
 
 test.P <- permanova(sv.RRsoy, n=5, formula, strata, indics)
-
+test2$out
 # explanatory variables NOT hardcoded in... ####
 
 permanova2<-function(ps , n, formula, strata, indics) {
