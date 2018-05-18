@@ -41,17 +41,21 @@ test.P <- permanova(sv.RRsoy, n=5, formula, strata, indics)
 test2$out
 # explanatory variables NOT hardcoded in... ####
 
-permanova2<-function(ps , n, formula, strata, indics) {
-  out<-adonis(otu_table(ps) ~ formula, strata, as(sample_data(ps), "data.frame"))
+permanova2<-function(ps , n, factors, env, strata, indics) {
+  formula<-paste0()
+  envdat<-paste0()
+  out<-adonis(otu_table(ps) ~ formula+envdat, strata, as(sample_data(ps), "data.frame"))
   
   tcoeffs<-data.frame(t(out$coefficients))
   tcoeffs$ID<-rownames(tcoeffs)
   
-  syst<-rbind(tcoeffs[which(tcoeffs$System.loc1> quantile(tcoeffs$System.loc1, prob=1-n/100)),], tcoeffs[which(tcoeffs$System.loc1< quantile(tcoeffs$System.loc1, prob=n/100)),]) #filter taxa based on steepest n% slopes in system.loc
+  for(i in factors){
+    i<-rbind(tcoeffs[which(tcoeffs$i> quantile(tcoeffs$i, prob=1-n/100)),], tcoeffs[which(tcoeffs$i< quantile(tcoeffs$i, prob=n/100)),])
+    
+  }
+  #syst<-rbind(tcoeffs[which(tcoeffs$System.loc1> quantile(tcoeffs$System.loc1, prob=1-n/100)),], tcoeffs[which(tcoeffs$System.loc1< quantile(tcoeffs$System.loc1, prob=n/100)),]) #filter taxa based on steepest n% slopes in system.loc
   
-  glyph<-rbind(tcoeffs[which(tcoeffs$Glyphosphate_Treatment1> quantile(tcoeffs$Glyphosphate_Treatment1, prob=1-n/100)),], tcoeffs[which(tcoeffs$Glyphosphate_Treatment1< quantile(tcoeffs$Glyphosphate_Treatment1, prob=n/100)),]) #filter taxa based on steepest 5% slopes in Glyphosphate Treatment
-  
-  date<-rbind(tcoeffs[which(tcoeffs$Sampling_date1> quantile(tcoeffs$Sampling_date1, prob=1-n/100)),], tcoeffs[which(tcoeffs$Sampling_date1< quantile(tcoeffs$Sampling_date1, prob=n/100)),]) #filter taxa based on steepest 5% slopes in Sampling Date
+  #slopes in Sampling Date
   
   a<-NULL
   b<-NULL
@@ -60,19 +64,14 @@ permanova2<-function(ps , n, formula, strata, indics) {
   e<-NULL
   ind<-as.data.frame(a,b,c,d,e)
   
-  sppInt <- for(i in indics){
-    first<-tcoeffs[which(tcoeffs$ID==i),]
-    ind<-rbind(ind, first)
-    return(ind)
-  }
-  
-  res<-NULL
-  res$out<-out
-  res$syst<-syst
-  res$glyph<-glyph
-  res$date<-date
-  res$sppInt<-sppInt
-  return(res)
+
+for(i in indics){
+  first<-tcoeffs[which(tcoeffs$ID==i),]
+  ind<-rbind(ind, first)
+}
+
+return(list(factors, ind))
+ 
 }
 
 
