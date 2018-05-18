@@ -68,7 +68,7 @@ table(as.data.frame(as.matrix(tax_table(ps.new)))$Kingdom)
 
 ps.new<-subset_taxa(ps.new, Kingdom!="Eukaryota")
 
-?transform_sample_counts
+# transform_sample_counts ####
 ?log
 
 ln.trans<-transform_sample_counts(ps.new, function(x) log(x))
@@ -77,7 +77,7 @@ log10.trans<-transform_sample_counts(ps.new, function(x) log10(x))
 ?ln
 ###
 ###
-# Subseting by location ####
+
 
 # NMDS for all samples, all sites ####
 # At this point in the workflow there is no filtering of low abundance taxa
@@ -128,37 +128,27 @@ head(sample_data(ps.newREL))
 # Should be run from unfiltered data
 # Make FSP-RR-Soy only phyloseq object from unfiltered original 
 
-# scratch space ####
+# make list of pseudomonas function ####
+?subset_taxa
+
+makepseudo<- function(ps){
+  udo<-subset_taxa(ps, Genus=="Pseudomonas")
+  udo2<-as.matrix(tax_table(pseudo))
+  indics<-rownames(pseudo2)
+  indics
+}
+# test # function #
 
 
 
-
-fsp.RRsoy <- subset_samples(ps.newRELF, Location == "Beltsville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
+# fsp RR soy ####
+fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere") #  
 fsp.RRsoy <- prune_taxa(taxa_sums(fsp.RRsoy) > 10, fsp.RRsoy)
 ntaxa(fsp.RRsoy)
 nsamples(fsp.RRsoy)
 
-# make list of pseudomonas example ####
-?subset_taxa
-pseudo<-subset_taxa(fsp.RRcorn, Genus=="Pseudomonas")
-pseudo2<-as.matrix(tax_table(pseudo))
-indics<-rownames(pseudo2)
-
-
-# backup original FSP-Soy-RR phyloseq object
-fsp.RRsoy0 <- fsp.RRsoy
-fspVST0 <- fspVST
-fspVST[fspVST < 0.0] <- 0.0
-
-otu_table(fsp.RRsoy) <- otu_table(fspVST, taxa_are_rows = TRUE)
-?ordinate
+#plots
 fsp.ord.pca.bray <- ordinate(fsp.RRsoy, method="PCoA", distance="bray")
-fsp.ord.rda.bray <- ordinate(fsp.RRsoy, method="RDA", distance="bray")
-fsp.ord.pca.jacc <- ordinate(fsp.RRsoy, method="PCoA", distance="jaccard")
-fsp.ord.mds.bray <- ordinate(fsp.RRsoy, method="MDS", distance="bray")
-
-
-#fsp.RRsoy.eigen <- eigen(fsp.ord.pca.bray)
 
 fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 fsp.plot2<-plot_ordination(fsp.RRsoy, fsp.ord.rda.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
@@ -172,8 +162,9 @@ bac.fsp.soy.qiime <- merge(as.data.frame(sample_data(fsp.RRsoy)), fsp.RRsoy.axis
 write.table(bac.fsp.soy.qiime, sep = "\t", file = "fsp.soy.qiime.txt", row.names = F, quote = F)
 
 # FSP Soy PERMANOVA
+fsp.Soy.pseudo<-makepseudo(fsp.RRsoy)
 
-
+fsp.Soy.Permanova<-permanova(fsp.RRsoy, n=2.5, fsp.Soy.pseudo)
 
 # FSP-RR-Corn ####
 # phyloseq object from unfiltered original
@@ -221,6 +212,8 @@ fsp.RRcorn.axisvals <- fsp.ord.pca.bray$vectors
 bac.fsp.corn.qiime <- merge(as.data.frame(sample_data(fsp.RRcorn)), fsp.RRcorn.axisvals, by = "row.names")
 write.table(bac.fsp.corn.qiime, sep = "\t", file = "fsp.corn.qiime.txt", row.names = F, quote = F)
 # fsp.RRcorn permanova ####
+
+fsp.corn.pseudo<-makepseudo(fsp.RRcorn)
 
 anova.FSP.RRcorn<-permanova(fsp.RRcorn, n=2.5, indics)
 
@@ -283,8 +276,6 @@ length(sample_data(fsp.RRsoyOrg6)$size)
 # Stoneville specific ####
 
 
-
-
 # Should be run from unfiltered data
 # Make sv-RR-Soy only phyloseq object from unfiltered original ####
 sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
@@ -292,39 +283,12 @@ sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
 nsamples(sv.RRsoy)
 
-# DESeq routines
-# make DESeq object
-svDS <- phyloseq_to_deseq2(sv.RRsoy, ~ Glyphosphate_Treatment)
 
-# Add column for system+gly
-svDS$group <- factor(paste(svDS$System.loc, svDS$Glyphosphate_Treatment))
-levels(svDS$group)<-sub(" ", "", levels(svDS$group))
-
-# Set the model to something meaningful
-design(svDS) <- formula(~ group + Sampling_date + Soil_Zone + group:Sampling_date)
-
-# Perform variance stabilization
-# Start the clock
-ptm <- proc.time()
-geoMeans = apply(counts(svDS), 1, gm_mean)
-svDS = estimateSizeFactors(svDS, geoMeans=geoMeans)
-svDS = estimateDispersions(svDS)
-svVSTC = getVarianceStabilizedData(svDS)
-# Stop the clock
-proc.time() - ptm
-
-# use VSTC counts
-# backup original sv-Soy-RR phyloseq object
-sv.RRsoy0 <- sv.RRsoy
-svVSTC0 <- svVSTC
-svVSTC[svVSTC < 0.0] <- 0.0
-
-otu_table(sv.RRsoy) <- otu_table(svVSTC, taxa_are_rows = TRUE)
 sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 sv.RRsoy.eigen <- eigen(sv.ord.pca.bray)
 
 sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment") 
-sv.plot + ggtitle("sv-Soy Relative transform NMDS (k=2) 16092 taxa") +
+sv.plot + ggtitle("sv-Soy RR PCoA") +
   geom_point(size = 3)
 
 sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
@@ -332,8 +296,42 @@ sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
 bac.sv.soy.qiime <- merge(as.data.frame(sample_data(sv.RRsoy)), sv.RRsoy.axisvals, by = "row.names")
 write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names = F, quote = F)
 
-# sv corn PERMANOVA ####
+# permanova ####
+sv.soy.pseudo<-makepseudo(sv.RRsoy)
 
+anova.sv.RRsoy<-permanova(sv.RRsoy, n=2.5, sv.soy.pseudo)
+
+# sv corn ####
+
+# Should be run from unfiltered data
+# Make sv-RR-Soy only phyloseq object from unfiltered original 
+sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") 
+sv.RRcorn <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
+ntaxa(sv.RRcorn)
+nsamples(sv.RRcorn)
+
+
+sv.ord.pca.bray.corn <- ordinate(sv.RRcorn, method="PCoA", distance="bray")
+
+
+sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color="year", shape="Glyphosphate_Treatment") 
+sv.plot + ggtitle("sv-Corn PCoA") +
+  geom_point(size = 3)
+
+sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
+
+bac.sv.soy.qiime <- merge(as.data.frame(sample_data(sv.RRsoy)), sv.RRsoy.axisvals, by = "row.names")
+write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names = F, quote = F)
+
+
+
+
+
+sv.corn.pseudo<-makepseudo(sv.RRcorn)
+
+anova.FSP.RRcorn<-permanova(sv.RRcorn, n=2.5, sv.corn.pseudo)
+
+# scratch space ####
 # for repeated measures, use subject as a blocking factor
 # thus let's explore some data!
 # how many samples taken from each unit?
@@ -363,31 +361,12 @@ unique(coeffs[3,])
 out
 
 
-# look up coefficients! need to report R value in addition to R squared!
 
 
 
 # ln transformed test run DESeq2 ####
 
-# Should be run from unfiltered data
-# Make sv-RR-Soy only phyloseq object from unfiltered original 
-sv.RRsoy <- subset_samples(ps.log.newRelF, Location == "Stoneville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
-sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
-ntaxa(sv.RRsoy)
-nsamples(sv.RRsoy)
 
-
-sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
-
-
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment") 
-sv.plot + ggtitle("sv-Soy Relative transform NMDS (k=2) 16092 taxa") +
-  geom_point(size = 3)
-
-sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
-
-bac.sv.soy.qiime <- merge(as.data.frame(sample_data(sv.RRsoy)), sv.RRsoy.axisvals, by = "row.names")
-write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names = F, quote = F)
 
 # sv Soy PERMANOVA
 metadata <- as(sample_data(sv.RRsoy), "data.frame")

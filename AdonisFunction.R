@@ -5,6 +5,22 @@
 # n=subset value for significance table; take top and bottom n percentage of slopes from coefficients table
 # indics<- list/vector of species of interest to look at coefficients
 
+# make list of pseudomonas function ####
+#make list of species from each ps object to look at pseudomonas coefficients
+# makes input object for the permanova function for the subset I'm interested in...
+
+makepseudo<- function(ps){
+  udo<-subset_taxa(ps, Genus=="Pseudomonas")
+  udo2<-as.matrix(tax_table(pseudo))
+  indics<-rownames(pseudo2)
+  indics
+}
+# test # function #
+
+
+# permanova function hardcoded ####
+
+
 permanova<-function(ps , n, indics) {
 out=adonis(otu_table(ps) ~ System.loc + Glyphosphate_Treatment + Sampling_date + Glyphosphate_Treatment:Sampling_date, strata = sample_data(ps)$Loc_plot_ID, as(sample_data(ps), "data.frame"))
 
