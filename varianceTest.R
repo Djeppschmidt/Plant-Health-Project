@@ -11,6 +11,8 @@ variance.test<-function(ps, group){
   out<-list("var"=a, "anova"=b)
 }
 
+extract.varPre<-function(x){mean(x$var$distance[x$var$group=="pre"])}
+extract.varPost<-function(x){mean(x$var$distance[x$var$group=="post"])}
 
 
 Var.summ<-function(x){
