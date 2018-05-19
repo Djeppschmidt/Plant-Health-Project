@@ -148,13 +148,14 @@ ntaxa(fsp.RRsoy)
 nsamples(fsp.RRsoy)
 
 #plots
-fsp.ord.pca.bray <- ordinate(fsp.RRsoy, method="PCoA", distance="bray")
+fsp.ord.pca.bray.soy <- ordinate(fsp.RRsoy, method="PCoA", distance="bray")
 
-fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
-fsp.plot2<-plot_ordination(fsp.RRsoy, fsp.ord.rda.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
-fsp.plot3<-plot_ordination(fsp.RRsoy, fsp.ord.rda.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
+fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
+
 fsp.plot + ggtitle("FSP-Soy") +
-  geom_point(size = 3)
+  geom_point(size = 2)
+
+
 
 fsp.RRsoy.axisvals <- fsp.ord.pca.bray$vectors
 
@@ -168,7 +169,7 @@ fsp.Soy.Permanova<-permanova(fsp.RRsoy, n=2.5, fsp.Soy.pseudo)
 
 # FSP-RR-Corn ####
 # phyloseq object from unfiltered original
-fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn") #  & Sampling_date == "pre" & crop == "corn"  & Glyphosphate_Treatment == "no_spray")
+fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") #  & Sampling_date == "pre" & crop == "corn"  & Glyphosphate_Treatment == "no_spray")
 fsp.RRcorn <- prune_taxa(taxa_sums(fsp.RRcorn) > 10, fsp.RRcorn)
 ntaxa(fsp.RRcorn)
 nsamples(fsp.RRcorn)
@@ -201,11 +202,11 @@ otu_table(fsp.RRcorn) <- otu_table(fspVSTC, taxa_are_rows = TRUE)
 
 # fsp.RRcorn PCoA ####
 
-fsp.ord.pca.bray <- ordinate(fsp.RRcorn, method="PCoA", distance="bray")
+fsp.ord.pca.bray.corn <- ordinate(fsp.RRcorn, method="PCoA", distance="bray")
 
-fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
-fsp.plot + ggtitle("FSP-corn") +
-  geom_point(size = 3)
+fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
+fsp.plot + ggtitle("FSP-corn PCOA") +
+  geom_point(size = 2)
 
 fsp.RRcorn.axisvals <- fsp.ord.pca.bray$vectors
 
@@ -278,16 +279,16 @@ length(sample_data(fsp.RRsoyOrg6)$size)
 
 # Should be run from unfiltered data
 # Make sv-RR-Soy only phyloseq object from unfiltered original ####
-sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
+sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy" & Soil_Zone=="rhizosphere") 
 sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
 nsamples(sv.RRsoy)
 
 
-sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
-sv.RRsoy.eigen <- eigen(sv.ord.pca.bray)
+sv.ord.pca.bray.soy <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment") 
+
+sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 sv.plot + ggtitle("sv-Soy RR PCoA") +
   geom_point(size = 3)
 
@@ -314,7 +315,7 @@ nsamples(sv.RRcorn)
 sv.ord.pca.bray.corn <- ordinate(sv.RRcorn, method="PCoA", distance="bray")
 
 
-sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color="year", shape="Glyphosphate_Treatment") 
+sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 sv.plot + ggtitle("sv-Corn PCoA") +
   geom_point(size = 3)
 
