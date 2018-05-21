@@ -22,11 +22,11 @@ makepseudo<- function(ps){
 # permanova function hardcoded ####
 
 
-permanova<-function(ps , n, indics) {
+permanova<-function(ps, n, indics) {
   require(phyloseq)
   require(vegan)
   require(stats)
-  out=adonis(otu_table(ps) ~ System.loc + Glyphosphate_Treatment + Sampling_date + Glyphosphate_Treatment:Sampling_date, strata = sample_data(ps)$Loc_plot_ID, as(sample_data(ps), "data.frame"))
+  out=adonis(otu_table(ps) ~ System.loc * Glyphosphate_Treatment * Sampling_date * Glyphosphate_Treatment * Soil_Zone, strata = sample_data(ps)$Loc_plot_ID, as(sample_data(ps), "data.frame"))
 
   tcoeffs<-data.frame(t(out$coefficients))
   tcoeffs$ID<-rownames(tcoeffs)

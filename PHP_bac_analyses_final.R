@@ -142,7 +142,7 @@ makepseudo<- function(ps){
 
 
 # fsp RR soy ####
-fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere") #  
+fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere") #  fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy")
 fsp.RRsoy <- prune_taxa(taxa_sums(fsp.RRsoy) > 10, fsp.RRsoy)
 ntaxa(fsp.RRsoy)
 nsamples(fsp.RRsoy)
@@ -169,7 +169,7 @@ fsp.Soy.Permanova<-permanova(fsp.RRsoy, n=2.5, fsp.Soy.pseudo)
 
 # FSP-RR-Corn ####
 # phyloseq object from unfiltered original
-fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") #  & Sampling_date == "pre" & crop == "corn"  & Glyphosphate_Treatment == "no_spray")
+fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") #  & fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn")
 fsp.RRcorn <- prune_taxa(taxa_sums(fsp.RRcorn) > 10, fsp.RRcorn)
 ntaxa(fsp.RRcorn)
 nsamples(fsp.RRcorn)
@@ -330,7 +330,7 @@ write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names =
 
 sv.corn.pseudo<-makepseudo(sv.RRcorn)
 
-anova.FSP.RRcorn<-permanova(sv.RRcorn, n=2.5, sv.corn.pseudo)
+anova.sv.RRcorn<-permanova(sv.RRcorn, n=2.5, sv.corn.pseudo)
 
 # scratch space ####
 # for repeated measures, use subject as a blocking factor
@@ -370,18 +370,8 @@ out
 
 
 # sv Soy PERMANOVA
-metadata <- as(sample_data(sv.RRsoy), "data.frame")
-sv.dist <- phyloseq::distance(sv.RRsoy, "bray")
-adonis(sv.dist ~ System.loc + 
-         year + 
-         Glyphosphate_Treatment + 
-         Sampling_date + 
-         Soil_Zone + 
-         Glyphosphate_Treatment + 
-         Glyphosphate_Treatment:Soil_Zone + 
-         Glyphosphate_Treatment:Sampling_date +
-         Glyphosphate_Treatment:Sampling_date:System.loc:year, 
-       as(sample_data(sv.RRsoy), "data.frame"))
+
+
 
 
 # log10 transformed test run DESeq2 ####
@@ -504,53 +494,7 @@ adonis(sv.dist ~ System.loc +
 
 
 # homogeneity of variances ####
-?betadisper
-?dist
-dist<-dist(otu_table(sv.RRsoy), method="euclidean")
-beta<-betadisper(dist, sample_data(sv.RRsoy)$Sampling_date)
-anova(beta)
-beta
 
-# sv-RR-Corn ####
-# phyloseq object from unfiltered original
-sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn") #  & Sampling_date == "pre" & crop == "corn"  & Glyphosphate_Treatment == "no_spray")
-sv.RRcorn <- prune_taxa(taxa_sums(sv.RRcorn) > 10, sv.RRcorn)
-ntaxa(sv.RRcorn)
-nsamples(sv.RRcorn)
 
-# DESeq routines
-# inherits phyloseq object from sv-only 
 
-svDC <- phyloseq_to_deseq2(sv.RRcorn, ~ Glyphosphate_Treatment)
-
-svDC$group <- factor(paste(svDC$System.loc, svDC$Glyphosphate_Treatment))
-
-levels(svDC$group)<-sub(" ", "", levels(svDC$group))
-
-design(svDC) <- formula(~ group + Sampling_date + Soil_Zone + group:Sampling_date)
-
-# Start the clock
-ptm <- proc.time()
-geoMeans = apply(counts(svDC), 1, gm_mean)
-svDC = estimateSizeFactors(svDC, geoMeans=geoMeans)
-svDC = estimateDispersions(svDC)
-svVSTC = getVarianceStabilizedData(svDC)
-# Stop the clock
-proc.time() - ptm
-
-sv.RRcorn0 <- sv.RRcorn
-svVSTC0 <- svVSTC
-svVSTC[svVSTC < 0.0] <- 0.0
-
-otu_table(sv.RRcorn) <- otu_table(svVSTC, taxa_are_rows = TRUE)
-sv.ord.pca.bray <- ordinate(sv.RRcorn, method="PCoA", distance="bray")
-
-sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment") 
-sv.plot + ggtitle("sv-corn Relative transform NMDS (k=2) 16092 taxa") +
-  geom_point(size = 3)
-
-sv.RRcorn.axisvals <- sv.ord.pca.bray$vectors
-
-bac.sv.corn.qiime <- merge(as.data.frame(sample_data(sv.RRcorn)), sv.RRcorn.axisvals, by = "row.names")
-write.table(bac.sv.corn.qiime, sep = "\t", file = "sv.corn.qiime.txt", row.names = F, quote = F)
 
