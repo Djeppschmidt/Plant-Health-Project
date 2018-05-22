@@ -13,6 +13,8 @@ require(devtools)
 library(vegan)
 library(DESeq2)
 
+
+#obsolete comments####
 #install.packages("VennDiagram")
 #install.packages("gplots")
 # creation of phyloseq object ####
@@ -43,6 +45,7 @@ library(DESeq2)
 #                   tax_table(phpfuntax.new))
 #ntaxa(ps.new)
 
+#inport sample data ####
 #taxa_names(ps.new)[1:5]
 sam<-read.csv("~/Documents/GitHub/Plant-Health-Project/Master_SampleData_Table_PHPv3_2.csv", colClasses = "factor")
 rownames(sam)<-sam$X.SampleID
@@ -128,36 +131,23 @@ head(sample_data(ps.newREL))
 # Should be run from unfiltered data
 # Make FSP-RR-Soy only phyloseq object from unfiltered original 
 
-# make list of pseudomonas function ####
-?subset_taxa
-
-makepseudo<- function(ps){
-  udo<-subset_taxa(ps, Genus=="Pseudomonas")
-  udo2<-as.matrix(tax_table(pseudo))
-  indics<-rownames(pseudo2)
-  indics
-}
-# test # function #
-
-
-
 # fsp RR soy ####
-fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere") #  fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy")
+fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy") #  fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy"& Soil_Zone == "rhizosphere")
 fsp.RRsoy <- prune_taxa(taxa_sums(fsp.RRsoy) > 10, fsp.RRsoy)
 ntaxa(fsp.RRsoy)
 nsamples(fsp.RRsoy)
+
 
 #plots
 fsp.ord.pca.bray.soy <- ordinate(fsp.RRsoy, method="PCoA", distance="bray")
 
 fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 
-fsp.plot + ggtitle("FSP-Soy") +
+fsp.plot + ggtitle("FSP-Soy PCoA") +
   geom_point(size = 2)
 
 
-
-fsp.RRsoy.axisvals <- fsp.ord.pca.bray$vectors
+fsp.RRsoy.axisvals <- fsp.ord.pca.bray.soy$vectors
 
 bac.fsp.soy.qiime <- merge(as.data.frame(sample_data(fsp.RRsoy)), fsp.RRsoy.axisvals, by = "row.names")
 write.table(bac.fsp.soy.qiime, sep = "\t", file = "fsp.soy.qiime.txt", row.names = F, quote = F)
@@ -169,7 +159,7 @@ fsp.Soy.Permanova<-permanova(fsp.RRsoy, n=2.5, fsp.Soy.pseudo)
 
 # FSP-RR-Corn ####
 # phyloseq object from unfiltered original
-fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") #  & fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn")
+fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn") #  & fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn"& Soil_Zone == "rhizosphere")
 fsp.RRcorn <- prune_taxa(taxa_sums(fsp.RRcorn) > 10, fsp.RRcorn)
 ntaxa(fsp.RRcorn)
 nsamples(fsp.RRcorn)
@@ -208,7 +198,7 @@ fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray.corn, type="samples", col
 fsp.plot + ggtitle("FSP-corn PCOA") +
   geom_point(size = 2)
 
-fsp.RRcorn.axisvals <- fsp.ord.pca.bray$vectors
+fsp.RRcorn.axisvals <- fsp.ord.pca.bray.corn$vectors
 
 bac.fsp.corn.qiime <- merge(as.data.frame(sample_data(fsp.RRcorn)), fsp.RRcorn.axisvals, by = "row.names")
 write.table(bac.fsp.corn.qiime, sep = "\t", file = "fsp.corn.qiime.txt", row.names = F, quote = F)
@@ -216,13 +206,13 @@ write.table(bac.fsp.corn.qiime, sep = "\t", file = "fsp.corn.qiime.txt", row.nam
 
 fsp.corn.pseudo<-makepseudo(fsp.RRcorn)
 
-anova.FSP.RRcorn<-permanova(fsp.RRcorn, n=2.5, indics)
+anova.FSP.RRcorn<-permanova(fsp.RRcorn, n=2.5, fsp.corn.pseudo)
 
 
-
-# FSP-RR-Corn unfiltered PCoA ####
+#ignore####
+# FSP-RR-Corn unfiltered PCoA ###
 # phyloseq object from unfiltered original
-fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") #  
+fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn") #   & Soil_Zone == "rhizosphere"
 
 fsp.RRcorn <- prune_taxa(taxa_sums(fsp.RRcorn) > 10, fsp.RRcorn)
 ntaxa(fsp.RRcorn)
@@ -232,12 +222,12 @@ nsamples(fsp.RRcorn)
 fsp.ord.pca.bray <- ordinate(fsp.RRcorn, method="PCoA", distance="bray")
 
 fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
-fsp.plot + ggtitle("FSP-corn2014 Untransformed PCoA") +
+fsp.plot + ggtitle("FSP-corn PCoA") +
   geom_point(size = 3)
 
-#fsp.RRcorn.axisvals <- fsp.ord.pca.bray$vectors
+fsp.RRcorn.axisvals <- fsp.ord.pca.bray$vectors
 
-#bac.fsp.corn.qiime <- merge(as.data.frame(sample_data(fsp.RRcorn)), fsp.RRcorn.axisvals, by = "row.names")
+bac.fsp.corn.qiime <- merge(as.data.frame(sample_data(fsp.RRcorn)), fsp.RRcorn.axisvals, by = "row.names")
 #write.table(bac.fsp.corn.qiime, sep = "\t", file = "fsp.corn.qiime.txt", row.names = F, quote = F)
 
 # FSP Org6 corn 2014 untransformed PCoA ####
@@ -253,7 +243,7 @@ fsp.plotOrg6<-plot_ordination(fsp.RRcornOrg6, fsp.ord.pca.brayOrg6, type="sample
 fsp.plotOrg6 + ggtitle("FSP_Org6-corn2014 Untransformed PCoA") +
   geom_point(size = 3)
 
-# FSP Org6 soy 2014 untransformed PCoA ####
+# FSP Org6 soy 2014 untransformed PCoA###
 fsp.RRsoyOrg6 <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere" & year == "2014" & System.loc == "Org_6")
 
 fsp.RRsoyOrg6 <- prune_taxa(taxa_sums(fsp.RRsoyOrg6) > 10, fsp.RRsoyOrg6)
@@ -277,9 +267,8 @@ length(sample_data(fsp.RRsoyOrg6)$size)
 # Stoneville specific ####
 
 
-# Should be run from unfiltered data
 # Make sv-RR-Soy only phyloseq object from unfiltered original ####
-sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy" & Soil_Zone=="rhizosphere") 
+sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy") # Soil_Zone=="rhizosphere"
 sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
 nsamples(sv.RRsoy)
@@ -289,10 +278,10 @@ sv.ord.pca.bray.soy <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 
 
 sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
-sv.plot + ggtitle("sv-Soy RR PCoA") +
+sv.plot + ggtitle("sv-Soy PCoA") +
   geom_point(size = 3)
 
-sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
+sv.RRsoy.axisvals <- sv.ord.pca.bray.soy$vectors
 
 bac.sv.soy.qiime <- merge(as.data.frame(sample_data(sv.RRsoy)), sv.RRsoy.axisvals, by = "row.names")
 write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names = F, quote = F)
@@ -306,7 +295,7 @@ anova.sv.RRsoy<-permanova(sv.RRsoy, n=2.5, sv.soy.pseudo)
 
 # Should be run from unfiltered data
 # Make sv-RR-Soy only phyloseq object from unfiltered original 
-sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn" & Soil_Zone == "rhizosphere") 
+sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn") #& Soil_Zone == "rhizosphere"
 sv.RRcorn <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRcorn)
 nsamples(sv.RRcorn)
@@ -319,10 +308,10 @@ sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color=
 sv.plot + ggtitle("sv-Corn PCoA") +
   geom_point(size = 3)
 
-sv.RRsoy.axisvals <- sv.ord.pca.bray$vectors
+sv.RRcorn.axisvals <- sv.ord.pca.bray.corn$vectors
 
-bac.sv.soy.qiime <- merge(as.data.frame(sample_data(sv.RRsoy)), sv.RRsoy.axisvals, by = "row.names")
-write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names = F, quote = F)
+bac.sv.corn.qiime <- merge(as.data.frame(sample_data(sv.RRcorn)), sv.RRcorn.axisvals, by = "row.names")
+write.table(bac.sv.corn.qiime, sep = "\t", file = "sv.corn.qiime.txt", row.names = F, quote = F)
 
 
 
@@ -331,7 +320,6 @@ write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names =
 sv.corn.pseudo<-makepseudo(sv.RRcorn)
 
 anova.sv.RRcorn<-permanova(sv.RRcorn, n=2.5, sv.corn.pseudo)
-
 # scratch space ####
 # for repeated measures, use subject as a blocking factor
 # thus let's explore some data!

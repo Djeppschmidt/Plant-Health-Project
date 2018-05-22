@@ -12,8 +12,8 @@
 makepseudo<- function(ps){
   require(phyloseq)
   udo<-subset_taxa(ps, Genus=="Pseudomonas")
-  udo2<-as.matrix(tax_table(pseudo))
-  indics<-rownames(pseudo2)
+  udo2<-as.matrix(tax_table(udo))
+  indics<-rownames(udo2)
   indics
 }
 # test # function #
@@ -26,7 +26,7 @@ permanova<-function(ps, n, indics) {
   require(phyloseq)
   require(vegan)
   require(stats)
-  out=adonis(otu_table(ps) ~ System.loc * Glyphosphate_Treatment * Sampling_date * Glyphosphate_Treatment * Soil_Zone, strata = sample_data(ps)$Loc_plot_ID, as(sample_data(ps), "data.frame"))
+  out=adonis(otu_table(ps) ~ System.loc * Glyphosphate_Treatment * Sampling_date * Soil_Zone, strata = sample_data(ps)$Loc_plot_ID, as(sample_data(ps), "data.frame"))
 
   tcoeffs<-data.frame(t(out$coefficients))
   tcoeffs$ID<-rownames(tcoeffs)
@@ -95,11 +95,22 @@ return(list(factors, ind))
 }
 
 
+# taxa interpretation workspace ####
 
 
+coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
+top.coef <- coef[rev(order(abs(coef)))[1:20]]
+par(mar = c(3, 14, 2, 1))
+barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
+?rev
 
+coef2<-rev(order(abs(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1)))
+par(mar = c(3, 14, 2, 1))
+barplot(sort(coef2), horiz = T, las = 1, main = "spp of int test")
 
+barplot(sort(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
 
+coef2<-coefficients(anova.sv.RRcorn$out)[which(anova.sv.RRcorn$out==fsp.corn.pseudo)]
 
 # scratch ####
 indics<-c("TACGTAGGGTGCGAGCGTTAATCGGAATTACTGGGCGTAAAGTGTGCGCAGGCGGCCGCGCAAGTCGAGTGTGAAAGCCCCGGGCTTAACTTGGGAATTGCGCTCGAAACTACGTGGCTGGAGTGTGGCAGAGGAAGGTGGAATTCCACGTGTAGCGGTGAAATGCGTAGAGATGTGGAGGAACACCAATGGCGAAGGCAGCCTTCTGGGCCAACACTGACGCTCATGCACGAAAGCGTGGGGAGCAAACAGG", "GACGAACCGTCCAAACGTTATTCGGAATCACTGGGCTTACAGAGTTCGTAGGCGGTCTGGAAAGTTGGGTGTGAAATCCCTCGGCTCAACCGAGGAACTGCGCTTGAAACTACCAGACTCGAGGGAGATAGAGGAAAGCGGAACTGATGGTGGAGCGGTGAAATGCGTTGATATCATCAGGAACACCGGTGGCGAAGGCGGCTTTCTGGGTCTTACCTGACGCTGAGGAACGAAAGCCAGGGGAGCGAACGGG")
