@@ -71,6 +71,10 @@ table(as.data.frame(as.matrix(tax_table(ps.new)))$Kingdom)
 
 ps.new<-subset_taxa(ps.new, Kingdom!="Eukaryota")
 
+seqs<-taxa_names(ps.new)
+name<-paste0("Seq", seq(ntaxa(ps.new)))
+nameKey<-data.frame(name, seqs)
+
 # transform_sample_counts ####
 ?log
 

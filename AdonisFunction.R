@@ -59,6 +59,46 @@ test2 <- permanova(sv.RRsoy, n=5, indics)
 
 test.P <- permanova(sv.RRsoy, n=5, formula, strata, indics)
 test2$out
+
+# parse indicators ####
+coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
+top.coef <- coef[rev(order(abs(coef)))[1:20]]
+par(mar = c(3, 14, 2, 1))
+barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
+?rev
+
+
+# try to add names
+coef <- coefficients(anova.sv.RRcorn$out)[which(taxa_names(anova.sv.RRcorn)==sv.corn.pseudo)]
+top.coef <- coef[rev(order(abs(coef)))[1:20]]
+par(mar = c(3, 14, 2, 1))
+barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
+?rev
+
+coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
+top.coef <- coef[rev(order(abs(coef)))[1:20]]
+par(mar = c(3, 14, 2, 1))
+barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
+?rev
+
+coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
+
+rownames(anova.sv.RRcorn$sppInt)
+
+?sort
+###
+barplot(sort(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
+
+barplot(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1, horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
+anova.sv.RRcorn
+
+
+db[order("anova.sv.RRcorn.sppInt.Glyphosphate_Treatment1.Soil_Zone1"),]
+
+
+db<-data.frame(rownames(anova.sv.RRcorn$sppInt),anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1)
+barplot(sort(db$anova.sv.RRcorn.sppInt.Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest")
+
 # explanatory variables NOT hardcoded in... ####
 
 permanova2<-function(ps , n, factors, env, strata, indics) {
@@ -96,21 +136,6 @@ return(list(factors, ind))
 
 
 # taxa interpretation workspace ####
-
-
-coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
-top.coef <- coef[rev(order(abs(coef)))[1:20]]
-par(mar = c(3, 14, 2, 1))
-barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
-?rev
-
-coef2<-rev(order(abs(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1)))
-par(mar = c(3, 14, 2, 1))
-barplot(sort(coef2), horiz = T, las = 1, main = "spp of int test")
-
-barplot(sort(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
-
-coef2<-coefficients(anova.sv.RRcorn$out)[which(anova.sv.RRcorn$out==fsp.corn.pseudo)]
 
 # scratch ####
 indics<-c("TACGTAGGGTGCGAGCGTTAATCGGAATTACTGGGCGTAAAGTGTGCGCAGGCGGCCGCGCAAGTCGAGTGTGAAAGCCCCGGGCTTAACTTGGGAATTGCGCTCGAAACTACGTGGCTGGAGTGTGGCAGAGGAAGGTGGAATTCCACGTGTAGCGGTGAAATGCGTAGAGATGTGGAGGAACACCAATGGCGAAGGCAGCCTTCTGGGCCAACACTGACGCTCATGCACGAAAGCGTGGGGAGCAAACAGG", "GACGAACCGTCCAAACGTTATTCGGAATCACTGGGCTTACAGAGTTCGTAGGCGGTCTGGAAAGTTGGGTGTGAAATCCCTCGGCTCAACCGAGGAACTGCGCTTGAAACTACCAGACTCGAGGGAGATAGAGGAAAGCGGAACTGATGGTGGAGCGGTGAAATGCGTTGATATCATCAGGAACACCGGTGGCGAAGGCGGCTTTCTGGGTCTTACCTGACGCTGAGGAACGAAAGCCAGGGGAGCGAACGGG")
@@ -165,3 +190,7 @@ for(i in indics){
 }
 first<-tcoeffs[which(tcoeffs$ID==i),]
 agh<-list("out"=out, "syst"=syst, "glyph"=glyph, "date"=date)
+
+anova.sv.RRcorn$glyph$Glyphosphate_Treatment1.Soil_Zone1
+rownames(anova.sv.RRcorn$glyph)
+
