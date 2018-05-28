@@ -16,6 +16,14 @@ makepseudo<- function(ps){
   indics<-rownames(udo2)
   indics
 }
+
+makefusarium<- function(ps){
+  require(phyloseq)
+  udo<-subset_taxa(ps, Genus=="g__Fusarium")
+  udo2<-as.matrix(tax_table(udo))
+  indics<-rownames(udo2)
+  indics
+}
 # test # function #
 
 
@@ -48,7 +56,8 @@ for(i in indics){
   first<-tcoeffs[which(tcoeffs$ID==i),]
   ind<-rbind(ind, first)
 }
-
+rownames(ind)<-indics # testing...
+ind<-data.frame(ind, factor(indics)) #not sure if this will work
 return(list("out"=out, "syst"=syst, "glyph"=glyph, "date"=date, "sppInt"=ind))
 
 }
@@ -66,38 +75,6 @@ top.coef <- coef[rev(order(abs(coef)))[1:20]]
 par(mar = c(3, 14, 2, 1))
 barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
 ?rev
-
-
-# try to add names
-coef <- coefficients(anova.sv.RRcorn$out)[which(taxa_names(anova.sv.RRcorn)==sv.corn.pseudo)]
-top.coef <- coef[rev(order(abs(coef)))[1:20]]
-par(mar = c(3, 14, 2, 1))
-barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
-?rev
-
-coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
-top.coef <- coef[rev(order(abs(coef)))[1:20]]
-par(mar = c(3, 14, 2, 1))
-barplot(sort(top.coef), horiz = T, las = 1, main = "Top taxa")
-?rev
-
-coef <- coefficients(anova.sv.RRcorn$out)["Glyphosphate_Treatment1:Sampling_date1",]
-
-rownames(anova.sv.RRcorn$sppInt)
-
-?sort
-###
-barplot(sort(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
-
-barplot(anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1, horiz = T, las=1, main="Species of Interest") # figure out how to do in ggplot2
-anova.sv.RRcorn
-
-
-db[order("anova.sv.RRcorn.sppInt.Glyphosphate_Treatment1.Soil_Zone1"),]
-
-
-db<-data.frame(rownames(anova.sv.RRcorn$sppInt),anova.sv.RRcorn$sppInt$Glyphosphate_Treatment1.Soil_Zone1)
-barplot(sort(db$anova.sv.RRcorn.sppInt.Glyphosphate_Treatment1.Soil_Zone1), horiz = T, las=1, main="Species of Interest")
 
 # explanatory variables NOT hardcoded in... ####
 
