@@ -26,3 +26,20 @@ sv.RRCorn.tmp<-eBayes(sv.RRCorn.tmp) #use bayesian statistics to determine signi
 
 sv.RRCorn.tmp2<-topTable(sv.RRCorn.tmp, coef=1, sort.by="P", n="INF") #make output table
 sv.RRCorn.tmp2
+
+#specify design outside of the function...
+
+limmaVoom<-function(ps, design){
+  otu<-as.matrix(t(otu_table(ps)))
+  dge<-DGEList(counts=otu)
+  dge<-calcNormFactors(dge)
+  sam.df<-sample_data(ps)
+  attach(sam.df)
+  v <- voom(dge, design, plot=TRUE)
+  fit<-lmFit(v, design)
+  contr<-makeContrasts(categories , levels=colnames(coef(fit)))
+  tmp<-contrasts.fit(fit, contr)
+  tmp<-eBayes(tmp)
+  tmp2<-topTable(sv.RRCorn.tmp, coef=1, sort.by="P", n="INF")
+  tmp2
+}

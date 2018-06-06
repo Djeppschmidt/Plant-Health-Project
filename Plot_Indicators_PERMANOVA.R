@@ -13,6 +13,7 @@ p+geom_bar(stat="identity")+theme_classic() + theme(axis.text.x=element_text(ang
 p<-ggplot(anova.fsp.RRsoy$sppInt, aes(x=reorder(factor.indics., -Glyphosphate_Treatment1.Sampling_date1), Glyphosphate_Treatment1.Sampling_date1))
 p+geom_bar(stat="identity")+theme_classic() + coord_flip() + theme(axis.text.x=element_text(angle=90, hjust=1))
 
+head(anova.fsp.RRsoy.F$sppInt)
 
 # sv Corn ####
 p<-ggplot(anova.sv.RRcorn$sppInt, aes(x=reorder(factor.indics., -Glyphosphate_Treatment1.Sampling_date1), Glyphosphate_Treatment1.Sampling_date1))
@@ -53,9 +54,13 @@ nameKey<-data.frame(name, seqs)
 taxa_names(fun.fsp.RRsoy.Deseq.raw)<-name
 
 head(anova.fsp.RRsoy$sppInt)
-test<-subset_taxa(fun.fsp.RRsoy.Deseq.raw, Genus=="g__Fusarium")
+test<-subset_taxa(fun.sv.RRsoy.Deseq.raw, Genus=="g__Fusarium")
+test2<-as.data.frame(tax_table(test))$DESeq_padj
+test3<-psmelt(test)
+head(test3)
 
-p<-ggplot(anova.fsp.RRsoy$sppInt, aes(x=reorder(factor.indics., -Glyphosphate_Treatment1.Sampling_date1), Glyphosphate_Treatment1.Sampling_date1), color=test)
-p+geom_bar(stat="identity")+theme_classic() + coord_flip() + theme(axis.text.x=element_text(angle=90, hjust=1))
-?
+p<-ggplot(anova.fsp.RRsoy.F$sppInt, aes(x=reorder(factor.indics., -Glyphosphate_Treatment1.Sampling_date1), Glyphosphate_Treatment1.Sampling_date1))
+p+geom_bar(stat="identity")+theme_classic() + coord_flip() + theme(axis.text.x=element_text(angle=90, hjust=1)) + scale_fill_manual("legend", values=c("sig"))
+
+t<-plot_bar(subset_taxa(fun.sv.RRsoy.Deseq.raw, Genus=="g__Fusarium"), fill="DESeq_padj")
 
