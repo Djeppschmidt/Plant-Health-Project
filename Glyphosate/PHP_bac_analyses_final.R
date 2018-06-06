@@ -40,8 +40,8 @@ library(DESeq2)
 
 
 
-#ps.new <- phyloseq(otu_table(seqtab.new, taxa_are_rows=FALSE),
-#                   sample_data(phpmeta),
+#ps.new <- phyloseq(otu_table(seqtab.new, taxa_are_rows=FALSE), 
+#                   sample_data(phpmeta), 
 #                   tax_table(phpfuntax.new))
 #ntaxa(ps.new)
 
@@ -52,8 +52,7 @@ rownames(sam)<-sam$X.SampleID
 
 
 ps.new<-readRDS("~/Desktop/PhD/PHP/bacarc_RAWcomDat.rds")
-sample_data(ps.new)<-sample_data(global.fungi)
-#sample_data(ps.new)<-sam
+sample_data(ps.new)<-sam
 
 #phpbactax.new<-tax_table(ps.new)
 
@@ -80,62 +79,10 @@ taxa_names(ps.new)<-name
 #check:
 head(taxa_names(ps.new))
 
-# subset samples to location, filter low abundance ####
-fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy")
-fsp.RRsoy <- prune_taxa(taxa_sums(fsp.RRsoy) > 10, fsp.RRsoy)
-
-fsp.RRcorn <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "corn")
-fsp.RRcorn <- prune_taxa(taxa_sums(fsp.RRcorn) > 10, fsp.RRcorn)
-
-sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy")
-sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
-
-sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn")
-sv.RRcorn <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
-
-# DESeq2 vst/differential abundance test ####
-
-# need to add correct metadata!
-bac.fsp.corn.Deseq.res<-diffDESeqB(fsp.RRcorn)
-bac.fsp.soy.Deseq.res<-diffDESeqB(fsp.RRsoy)
-bac.SV.corn.Deseq.res<-diffDESeqB(sv.RRcorn)
-bac.SV.soy.Deseq.res<-diffDESeqB(sv.RRsoy)
-
-# permanova test ####
-
-bac.fsp.Soy.Pseudo<-makepseudo(fsp.RRsoy)
-anova.fsp.RRsoy.B<-permanova(fsp.RRsoy, n=2.5, bac.fsp.Soy.Pseudo)
-
-bac.fsp.corn.Pseudo<-makepseudo(fsp.RRcorn)
-anova.fsp.RRcorn.B<-permanova(fsp.RRcorn, n=2.5, bac.fsp.corn.Pseudo)
-
-bac.sv.Soy.Pseudo<-makepseudo(sv.RRsoy)
-anova.sv.RRsoy.B<-permanova2(sv.RRsoy, n=2.5, bac.sv.Soy.Pseudo)
-
-bac.sv.corn.Pseudo<-makepseudo(sv.RRcorn)
-anova.sv.RRcorn.B<-permanova2(sv.RRcorn, n=2.5, bac.sv.corn.Pseudo)
-
-# extract P values ####
-
-
-fsp.RRcorn<-extractP(fsp.RRcorn, bac.fsp.corn.Deseq.res, anova.fsp.RRcorn.B)
-fsp.RRsoy<-extractP(fsp.RRsoy, bac.fsp.soy.Deseq.res, anova.fsp.RRsoy.B)
-sv.RRcorn<-extractP(sv.RRcorn, bac.SV.corn.Deseq.res, anova.sv.RRcorn.B)
-sv.RRsoy<-extractP(sv.RRsoy, bac.SV.soy.Deseq.res, anova.sv.RRsoy.B)
-
-# plot figures ####
-
-
-p5<-plotCoeffB(fsp.RRcorn, title="FSP Bacteria Corn", xlab="Taxon", ylab="Coefficient Value")
-p6<-plotCoeffB(fsp.RRsoy, title="FSP Bacteria Soy", xlab="Taxon", ylab="Coefficient Value")
-p7<-plotCoeffB(sv.RRcorn, title="SV Bacteria Corn", xlab="Taxon", ylab="Coefficient Value")
-p8<-plotCoeffB(sv.RRsoy, title="SV Bacteria Soy", xlab="Taxon", ylab="Coefficient Value")
-
-multiplot(p5, p6, p7, p8, cols=2)
 
 # FSP specific ####
 # Should be run from unfiltered data
-# Make FSP-RR-Soy only phyloseq object from unfiltered original
+# Make FSP-RR-Soy only phyloseq object from unfiltered original 
 
 # fsp RR soy ####
 fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy") #  fsp.RRsoy <- subset_samples(ps.new, Location == "Beltsville" & genotype == "RR" & crop == "soy"& Soil_Zone == "rhizosphere")
@@ -147,7 +94,7 @@ nsamples(fsp.RRsoy)
 #plots
 fsp.ord.pca.bray.soy <- ordinate(fsp.RRsoy, method="PCoA", distance="bray")
 
-fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+fsp.plot<-plot_ordination(fsp.RRsoy, fsp.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 
 fsp.plot + ggtitle("FSP-Soy PCoA") +
   geom_point(size = 2)
@@ -192,9 +139,9 @@ nsamples(sv.RRsoy)
 sv.ord.pca.bray.soy <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 
 
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray.soy, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 sv.plot + ggtitle("sv-Soy PCoA") +
-  geom_point(size = 3)+ theme_classic()
+  geom_point(size = 3)
 
 sv.RRsoy.axisvals <- sv.ord.pca.bray.soy$vectors
 
@@ -209,9 +156,9 @@ anova.sv.RRsoy<-permanova(sv.RRsoy, n=2.5, sv.soy.pseudo)
 # sv corn ####
 
 # Should be run from unfiltered data
-# Make sv-RR-Soy only phyloseq object from unfiltered original
+# Make sv-RR-Soy only phyloseq object from unfiltered original 
 sv.RRcorn <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "corn") #& Soil_Zone == "rhizosphere"
-sv.RRcorn <- prune_taxa(taxa_sums(sv.RRcorn) > 10, sv.RRcorn)
+sv.RRcorn <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRcorn)
 nsamples(sv.RRcorn)
 
@@ -219,9 +166,9 @@ nsamples(sv.RRcorn)
 sv.ord.pca.bray.corn <- ordinate(sv.RRcorn, method="PCoA", distance="bray")
 
 
-sv.plot2<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
-sv.plot2 + ggtitle("sv-Corn PCoA") +
-  geom_point(size = 3) + theme_classic()
+sv.plot<-plot_ordination(sv.RRcorn, sv.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
+sv.plot + ggtitle("sv-Corn PCoA") +
+  geom_point(size = 3)
 
 sv.RRcorn.axisvals <- sv.ord.pca.bray.corn$vectors
 
@@ -289,7 +236,7 @@ nsamples(fsp.RRcorn)
 
 fsp.ord.pca.bray <- ordinate(fsp.RRcorn, method="PCoA", distance="bray")
 
-fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 fsp.plot + ggtitle("FSP-corn PCoA") +
   geom_point(size = 3)
 
@@ -307,7 +254,7 @@ table(sample_data(fsp.RRcornOrg6)$System.loc)
 
 fsp.ord.pca.brayOrg6 <- ordinate(fsp.RRcornOrg6, method="PCoA", distance="bray")
 
-fsp.plotOrg6<-plot_ordination(fsp.RRcornOrg6, fsp.ord.pca.brayOrg6, type="samples", color="Sampling_date", shape="Glyphosphate_Treatment")
+fsp.plotOrg6<-plot_ordination(fsp.RRcornOrg6, fsp.ord.pca.brayOrg6, type="samples", color="Sampling_date", shape="Glyphosphate_Treatment") 
 fsp.plotOrg6 + ggtitle("FSP_Org6-corn2014 Untransformed PCoA") +
   geom_point(size = 3)
 
@@ -322,7 +269,7 @@ table(sample_data(fsp.RRsoyOrg6)$System.loc)
 
 fspSoy.ord.pca.brayOrg6 <- ordinate(fsp.RRsoyOrg6, method="PCoA", distance="bray")
 
-fsp.plotOrg6Soy<-plot_ordination(fsp.RRsoyOrg6, fspSoy.ord.pca.brayOrg6, type="samples", color="Sampling_date", shape="Glyphosphate_Treatment")
+fsp.plotOrg6Soy<-plot_ordination(fsp.RRsoyOrg6, fspSoy.ord.pca.brayOrg6, type="samples", color="Sampling_date", shape="Glyphosphate_Treatment") 
 fsp.plotOrg6Soy + ggtitle("FSP_Org6-Soy 2014 Untransformed PCoA") +
   geom_point(size = sample_data(fsp.RRsoyOrg6)$size)
 
@@ -330,7 +277,7 @@ length(sample_data(fsp.RRsoyOrg6)$size)
 
 
 # DESeq routines; ignore!! ####
-# inherits phyloseq object from FSP-only
+# inherits phyloseq object from FSP-only 
 
 fspDC <- phyloseq_to_deseq2(fsp.RRcorn, ~ Glyphosphate_Treatment)
 
@@ -359,7 +306,7 @@ otu_table(fsp.RRcorn) <- otu_table(fspVSTC, taxa_are_rows = TRUE)
 
 fsp.ord.pca.bray.corn <- ordinate(fsp.RRcorn, method="PCoA", distance="bray")
 
-fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+fsp.plot<-plot_ordination(fsp.RRcorn, fsp.ord.pca.bray.corn, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 fsp.plot + ggtitle("FSP-corn PCOA") +
   geom_point(size = 2)
 
@@ -382,7 +329,7 @@ log10.trans<-transform_sample_counts(ps.new, function(x) log10(x))
 # NMDS for all samples, all sites ####
 # At this point in the workflow there is no filtering of low abundance taxa
 # You might want to do that later, but you will need to build a filtered
-# phyloseq object
+# phyloseq object 
 # remove Urbana sites first
 
 # Transformations ####
@@ -408,7 +355,7 @@ ntaxa(ps.log10.newRelF)
 
 set.seed(197)
 all.ord.nmds.bray <- ordinate(ps.newREL, k = 4, method="NMDS", distance="bray", maxit = 30000, sratmax = 0.99999999, sfgrmin = 1e-10)#, sratmax = 0.9999999)#, k = 2, sfgrmin = 1e-8, sratmax = 0.999999, maxit = 30000)
-all.plot<-plot_ordination(ps.newREL, all.ord.nmds.bray, type="samples", color="Location")#, shape="Location")
+all.plot<-plot_ordination(ps.newREL, all.ord.nmds.bray, type="samples", color="Location")#, shape="Location") 
 all.plot + geom_point(size = 2.5)#+ geom_polygon(geom_point(size=5) + ggtitle("samples"))
 ggsave("all_sites_nmds_reltrans_101602_taxa.pdf", plot = last_plot(), device = pdf, height = 6, width = 8)
 
@@ -428,7 +375,7 @@ head(sample_data(ps.newREL))
 # log10 transformed test run DESeq2 ####
 
 # Should be run from unfiltered data
-# Make sv-RR-Soy only phyloseq object from unfiltered original
+# Make sv-RR-Soy only phyloseq object from unfiltered original 
 sv.RRsoy <- subset_samples(ps.log10.newRelF, Location == "Stoneville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
 sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
@@ -438,7 +385,7 @@ nsamples(sv.RRsoy)
 sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 
 
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 sv.plot + ggtitle("sv RR soy log10 PCoA") +
   geom_point(size = 3)
 
@@ -450,15 +397,15 @@ write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names =
 # sv Soy PERMANOVA
 metadata <- as(sample_data(sv.RRsoy), "data.frame")
 sv.dist <- phyloseq::distance(sv.RRsoy, "bray")
-adonis(sv.dist ~ System.loc +
-         year +
-         Glyphosphate_Treatment +
-         Sampling_date +
-         Soil_Zone +
-         Glyphosphate_Treatment +
-         Glyphosphate_Treatment:Soil_Zone +
+adonis(sv.dist ~ System.loc + 
+         year + 
+         Glyphosphate_Treatment + 
+         Sampling_date + 
+         Soil_Zone + 
+         Glyphosphate_Treatment + 
+         Glyphosphate_Treatment:Soil_Zone + 
          Glyphosphate_Treatment:Sampling_date +
-         Glyphosphate_Treatment:Sampling_date:System.loc:year,
+         Glyphosphate_Treatment:Sampling_date:System.loc:year, 
        as(sample_data(sv.RRsoy), "data.frame"))
 
 
@@ -467,7 +414,7 @@ adonis(sv.dist ~ System.loc +
 # sqrt transformed test run DESeq2 ####
 
 # Should be run from unfiltered data
-# Make sv-RR-Soy only phyloseq object from unfiltered original
+# Make sv-RR-Soy only phyloseq object from unfiltered original 
 sv.RRsoy <- subset_samples(ps.rsq.newRelF, Location == "Stoneville" & genotype == "RR" & crop == "soy") #  & Sampling_date == "pre" & crop == "soy"  & Glyphosphate_Treatment == "no_spray")
 sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
@@ -477,7 +424,7 @@ nsamples(sv.RRsoy)
 sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 
 
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment")
+sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="year", shape="Glyphosphate_Treatment") 
 sv.plot + ggtitle("sv-Soy Relative transform NMDS (k=2) 16092 taxa") +
   geom_point(size = 3)
 
@@ -489,25 +436,25 @@ write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names =
 # sv Soy PERMANOVA
 metadata <- as(sample_data(sv.RRsoy), "data.frame")
 sv.dist <- phyloseq::distance(sv.RRsoy, "bray")
-adonis(sv.dist ~ System.loc +
-         year +
-         Glyphosphate_Treatment +
-         Sampling_date +
-         Soil_Zone +
-         Glyphosphate_Treatment +
-         Glyphosphate_Treatment:Soil_Zone +
+adonis(sv.dist ~ System.loc + 
+         year + 
+         Glyphosphate_Treatment + 
+         Sampling_date + 
+         Soil_Zone + 
+         Glyphosphate_Treatment + 
+         Glyphosphate_Treatment:Soil_Zone + 
          Glyphosphate_Treatment:Sampling_date +
-         Glyphosphate_Treatment:Sampling_date:System.loc:year,
+         Glyphosphate_Treatment:Sampling_date:System.loc:year, 
        as(sample_data(sv.RRsoy), "data.frame"))
 
 
 
 
-# untransformed transformed test run
+# untransformed transformed test run 
 
 # Should be run from unfiltered data
-# Make sv-RR-Soy only phyloseq object from unfiltered original
-sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere")
+# Make sv-RR-Soy only phyloseq object from unfiltered original 
+sv.RRsoy <- subset_samples(ps.new, Location == "Stoneville" & genotype == "RR" & crop == "soy" & Soil_Zone == "rhizosphere") 
 sv.RRsoy <- prune_taxa(taxa_sums(sv.RRsoy) > 10, sv.RRsoy)
 ntaxa(sv.RRsoy)
 nsamples(sv.RRsoy)
@@ -517,9 +464,9 @@ nsamples(sv.RRsoy)
 sv.ord.pca.bray <- ordinate(sv.RRsoy, method="PCoA", distance="bray")
 sv.ord.NMDS.bray <- ordinate(sv.RRsoy, method="NMDS", distance="bray")
 
-sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+sv.plot<-plot_ordination(sv.RRsoy, sv.ord.pca.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 
-sv.plot2<-plot_ordination(sv.RRsoy, sv.ord.NMDS.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment")
+sv.plot2<-plot_ordination(sv.RRsoy, sv.ord.NMDS.bray, type="samples", color="System.loc", shape="Glyphosphate_Treatment") 
 
 sv.plot + ggtitle("sv RR soy No Transformation PCOA") +
   geom_point(size = 3)
@@ -532,41 +479,20 @@ write.table(bac.sv.soy.qiime, sep = "\t", file = "sv.soy.qiime.txt", row.names =
 # sv Soy PERMANOVA
 metadata <- as(sample_data(sv.RRsoy), "data.frame")
 sv.dist <- phyloseq::distance(sv.RRsoy, "bray")
-adonis(sv.dist ~ System.loc +
-         year +
-         Glyphosphate_Treatment +
-         Sampling_date +
-         Soil_Zone +
-         Glyphosphate_Treatment +
-         Glyphosphate_Treatment:Soil_Zone +
+adonis(sv.dist ~ System.loc + 
+         year + 
+         Glyphosphate_Treatment + 
+         Sampling_date + 
+         Soil_Zone + 
+         Glyphosphate_Treatment + 
+         Glyphosphate_Treatment:Soil_Zone + 
          Glyphosphate_Treatment:Sampling_date +
-         Glyphosphate_Treatment:Sampling_date:System.loc:year,
+         Glyphosphate_Treatment:Sampling_date:System.loc:year, 
        as(sample_data(sv.RRsoy), "data.frame"))
 
 
 # homogeneity of variances ####
 
 
-# richness ####
-
-richnessB<-estimate_richness(ps.new, measures=c("Observed","Shannon"))
-dim(richnessB)
-library(nlme)
-sam<-as.data.frame(as.matrix(sample_data(ps.new)))
-sam<-data.frame(sam, richnessB)
-attach(sam)
-head(sam)
-
-model<-gls(Shannon~System.loc*Sampling_date*crop*Glyphosphate_Treatment*genotype*Soil_Zone*Herbicide_History, correlation=corAR1(form=~1|Loc_plot_ID), data=sam)
-
-model<-gls(Shannon~System.loc*Sampling_date*crop*Glyphosphate_Treatment*genotype*Soil_Zone*Herbicide_History, correlation=corAR1(), data=sam)
-model<-gls(Shannon~Glyphosphate_Treatment*Sampling_date, correlation=corAR1(), data=sam)
-anova(model)
 
 
-model2<-gls(Shannon~Glyphosphate_Treatment*Loc_plot_ID, correlation=corAR1(), data=sam)
-anova(model2)
-
-model<-gls(Shannon~Glyphosphate_Treatment*Sampling_date+System.loc, correlation=corAR1(), data=sam)
-anova(model)
-?gls
