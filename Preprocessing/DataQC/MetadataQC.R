@@ -185,7 +185,8 @@ RH<-phyloseq(Belt, sample_data(RH.meta))
 
 Belt<-phyloseq(Belt, sample_data(B.meta))
 
-save.RDS(RH, )
+saveRDS(RH, "~/Documents/GitHub/Plant-Health-Project/Analysis/Data/BacterialRhizospherePhyloseq18112020.rds")
+saveRDS(Belt, "~/Documents/GitHub/Plant-Health-Project/Analysis/Data/Bacteria18112020.rds")
 # ignore cfu for now
 
 
