@@ -5,7 +5,6 @@ Chem<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/key.csv")) # sheet
 CFU<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/CFU.csv"))
 meta<-as.data.frame(as.matrix(sample_data(bac))) # from workflow output on scinet (prepared by Ryan?)
 
-
 # need to build out unique analyses for each because of dataset structure?
 # plot level chem data
 # PLFA = all with bulk and rhizosphere
@@ -27,12 +26,12 @@ meta<-as.data.frame(as.matrix(sample_data(bac))) # from workflow output on scine
 meta<-meta[meta$System.loc=="Org_6" | meta$System.loc=="Org_3" | meta$System.loc=="CT-MD" | meta$System.loc=="NT-MD",]
 
 # data reconciliation tasks: 
-# fill chem data to plot level [_]
-# fill PLFA data to sample level [_]
-# PLFA subset to rhizosphere [_]
-# fill NLFA data to rhizosphere sample level [_]
-# make phyloseq with rhizosphere [_]
-# make phyloseq with all plfa [_]
+# fill chem data to plot level [X]
+# fill PLFA data to sample level [X]
+# PLFA subset to rhizosphere [X]
+# fill NLFA data to rhizosphere sample level [X]
+# make phyloseq with rhizosphere [X]
+# make phyloseq with all plfa [X]
 
 
 # prepare phyloseq objects:
@@ -181,9 +180,9 @@ B.meta<-left_join(PLFA2,Chem2) #
 rownames(B.meta)<-B.meta$X.SampleID
 
 rownames(RH.meta)<-RH.meta$X.SampleID
-RH<-phyloseq(Belt, sample_data(RH.meta))
+RH<-merge_phyloseq(RH, sample_data(RH.meta))
 
-Belt<-phyloseq(Belt, sample_data(B.meta))
+Belt<-merge_phyloseq(Belt, sample_data(B.meta))
 
 saveRDS(RH, "~/Documents/GitHub/Plant-Health-Project/Analysis/Data/BacterialRhizospherePhyloseq18112020.rds")
 saveRDS(Belt, "~/Documents/GitHub/Plant-Health-Project/Analysis/Data/Bacteria18112020.rds")
