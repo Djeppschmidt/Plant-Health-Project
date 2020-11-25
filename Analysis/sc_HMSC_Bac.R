@@ -11,7 +11,7 @@ library(stringr)
 library(Model.Microbiome)
 
 # To Do List:
-# return to see table mergning for the metadata     [_]
+# return to see table merging for the metadata      [_]
 # sort code into proper files                       [X]
 # Q1 Probit model                                   [X]
 # Q1 Lognormal Model                                [X]
@@ -20,16 +20,17 @@ library(Model.Microbiome)
 # Q1 (For Q3) Lognormal Model + AM fungi            [X]
 # Q1 (For Q3) Probit Model + AM fungi               [X]
   
-# Q2 Probit for each plot                           [_]
-# Q2 lognormal for each plot                        [_]
-# Q2 Probit Model + AM Fungi for each plot (Q3)     [_]
-# Q2 lognormal Model + AM Fungi for each plot (Q3)  [_]
+# Q2 Probit for each plot                           [X]
+# Q2 lognormal for each plot                        [X]
+# Q2 Probit Model + AM Fungi for each plot (Q3)     [X]
+# Q2 lognormal Model + AM Fungi for each plot (Q3)  [X]
 
 # Q3 Predict Env. Gradient (Global)                 [_] # can do this in post
 # Q3 Compute variation explained by AM (Global)     [X]
 
 # Final Syntax Check                                [_]
-
+# pilot run functions on local computer             [_]
+# move visualization script to visfile              [_]
 
 
 # Analysis 1: Role of AMF abundance on microbial networks; Drivers of +/- interaciton networks ; Exploratory analysis of bacterial and fungal competition or symbiosis
@@ -143,16 +144,7 @@ LogPoiGQ3$VP<-computeVariancePartitioning(LogPoiGQ3$bf, group=c(1,1,1,1,1,2,2,3,
 LogPoiGQ3$postBeta<-getPostEstimate(LogPoiGQ3$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 saveRDS(LogPoiGQ3, "Data/LogPoiModel3_Gdat.RDS")
 
-# To do on local machine:
-    # extract + associations
-    # extract - associations
-    # filter for large effects in each
-    # filter for bacterial-fungal interactions [examine seperately unique interactions]
-    # Construct + / - association networks
-    # Identify taxa that are central (either bacteria or fungi)
-    # identify hubs
-    # Explore each of the hubs and central taxa individually
-    # (should the networks include taxa that only strongly associate with others of same type? / compare levels between networks? are there more fungi vs bacteria than within each group?)
+
 
 # Analysis 2: Effect of farming system on Competition and Cooperation of bacteria vs fungi
     # Use combined dataset
@@ -217,22 +209,75 @@ list.CT<-list(CT.101, CT.102, CT.116, CT.212, CT.213, CT.214, CT.313, CT.315, CT
 list.NT<-list(NT.103, NT.104, NT.117, NT.215, NT.216, NT.217, NT.304, NT.305, NT.306, NT.403, NT.407, NT.408)
 list.Org3<-list(Org_3.113, Org_3.114, Org_3.115, Org_3.209, Org_3.210, Org_3.211, Org_3.301, Org_3.302, Org_3.303)
 list.Org6<-list(Org_6.107, Org_6.109, Org_6.110, Org_6.204, Org_6.205, Org_6.206, Org_6.308, Org_6.310, Org_6.311, Org_6.412, Org_6.413, Org_6.415)
-runHMSC<-function(list, method){
-  out<-lapply(list, method)
+runHMSC<-function(list, method=NULL){
+  out<-sapply(list, applyHMSC, simplify=F, USE.NAMES = T, method)
   out
 }
 applyHMSC<-function(ps, method){
   out<-NULL
-  XDat<-
-  Ydat
+  out$probit<-NULL
+  out$LogPoi<-NULL
+  Ydat<-as.data.frame(as.matrix(otu_table(ps)))
+  XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
+  XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
+  rownames(b.XDat1)<-c(1:nrow(b.XDat1))
+  if(is.null(method)){
+    XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM...}
+  if(method=="AM"){
+    XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM... + NLFA.AM.Fungi
+  }
+  XDat1$Sample<-as.factor(c(1:nrow(b.XDat1)))
+  studyDesign = data.frame("Sample"=b.XDat1$Sample,"Sampling_date"=b.XDat1$Sampling_date, "year"=b.XDat1$year)
+  rL1 <- HmscRandomLevel(units=studyDesign$Sample)
+  rL2 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
+  rL3 <- HmscRandomLevel(units=studyDesign$year)
+  # first do probit model ####
+  bf<-Hmsc(Y=Ydat, XData=XDat, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit") 
+  out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
   
+  # examine correlation matrix for probit model
+  # get outputs for HMSC analysis
+  out$probitGQ2$OmegaCor.probit=computeAssociations(probitGQ2$bf)
+  out$probitGQ2$preds<-computePredictedValues(probitGQ2$bf)
+  out$probitGQ2$MF<-evaluateModelFit(probitGQ2$bf, predY=probitGQ2$preds)
+  if(is.null(method)){out$probitGQ2$VP<-computeVariancePartitioning(probitGQ2$bf, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
+  if(method=="AM"){out$probitGQ2$VP<-computeVariancePartitioning(probitGQ2$bf, group=c(1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
+  out$probitGQ2$postBeta<-getPostEstimate(probitGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+  
+  Y2<-as.matrix(t(Ydat)) # global OTU table
+  Y2[Y2==0]<-NA # remove zero counts
+  out$LogPoi$bf<-Hmsc(Y=Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
+  out$LogPoi$bf<-sampleMcmc(LogPoiQ2$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
+  out$LogPoi$OmegaCor.lp=computeAssociations(LogPoiGQ2$bf.lp)
+  out$LogPoi$preds<-computePredictedValues(LogPoiGQ2$bf.lp)
+  out$LogPoi$MF<-evaluateModelFit(LogPoiGQ2$bf.lp, predY=LogPoiGQ2$preds)
+  if(is.null(method)){out$LogPoi$VP<-computeVariancePartitioning(LogPoiGQ2$bf, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
+  if(method=="AM"){out$LogPoi$VP<-computeVariancePartitioning(LogPoiGQ2$bf, group=c(1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
+  out$LogPoi$postBeta<-getPostEstimate(LogPoiGQ2$bf.lp, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+  out
 }
-# for local computer
-    # Make positive and negative association networks
-    # collect descriptive stats on networks ( can get from model 1)
-    # Run stats on difference among networks in farming systems
 
+CTQ2<-runHMSC(list.CT)
+NTQ2<-runHMSC(list.NT)
+O3Q2<-runHMSC(list.Org3)
+O6Q2<-runHMSC(list.Org6)
 
+saveRDS(CTQ2, "Data/Q2CT.RDS")
+saveRDS(NTQ2, "Data/Q2NT.RDS")
+saveRDS(O3Q2, "Data/Q2O2.RDS")
+saveRDS(O6Q2, "Data/Q2O6.RDS")
+
+CTQ3<-runHMSC(list.CT, method="AM")
+NTQ3<-runHMSC(list.NT,method="AM")
+O3Q3<-runHMSC(list.Org3, method="AM")
+O6Q3<-runHMSC(list.Org6,method="AM")
+
+saveRDS(CTQ3, "Data/Q3CT.RDS")
+saveRDS(NTQ3, "Data/Q3NT.RDS")
+saveRDS(O3Q3, "Data/Q3O2.RDS")
+saveRDS(O6Q3, "Data/Q3O6.RDS")
+
+q()
 # Analysis 3: Effect of AMF Abundance on bacterial and fungal networks
 # format data for HMSC
 # Model 1: All edaphic factors - AMF as predictors (date/time as random)
@@ -253,61 +298,14 @@ applyHMSC<-function(ps, method){
 # ID of high centrality score taxa in network
 # effect of cropping system on AMF and selected highly central taxa
 
+####### End of File #########
+
+
+
+
 # format data for HMSC
 
-# probit model (update to reflect the actual analysis?)
-RH.Ydat<-as.data.frame(as.matrix(otu_table(RH)))# dim(b.Ydat)
-RH.XDat1<-as.data.frame(as.matrix(sample_data(RH)), stringsAsFactors = TRUE)
-RH.XDat1<-b.XDat1[,c()] # this needs to be updated!!
-rownames(b.XDat1)<-c(1:nrow(b.XDat1))
-RH.XDat1$Sample<-as.factor(c(1:nrow(b.XDat1)))
-RH.XFormula1= ~Glyphosphate_Treatment + genotype + System.loc + Loc_plot_ID + crop + pH + OM... # changed since last time
-RH.XFormula2= ~Glyphosphate_Treatment + genotype +System.loc + Loc_plot_ID + crop + pH + OM...+ NLFA.AM.Fungi
-studyDesign = data.frame("Sample"=b.XDat1$Sample,"Loc_plot_ID"=b.XDat1$Loc_plot_ID, "Sampling_date"=b.XDat1$Sampling_date)
-rL1 <- HmscRandomLevel(units=studyDesign$Sample)
-rL2 <- HmscRandomLevel(units=studyDesign$Loc_plot_ID) # set random level to loc_plot_ID
-rL3 <- HmscRandomLevel(units=studyDesign$Sampling_date)
-rL4 <- HmscRandomLevel(units=studyDesign$)# second random level is sampling 
-# final model should have pH and organic matter as random levels
-# first do probit model ####
-b.m1<-Hmsc(Y=as.matrix(t(b.Ydat)), XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="probit")
-b.m1<-sampleMcmc(b.m.lp, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
-OmegaCor.lp=computeAssociations(bf.lp)
-probit3$OmegaCor.probit=computeAssociations(probit1$bfm1)
-probit3$preds<-computePredictedValues(probit1$bfmq)
-probit3$MF<-evaluateModelFit(probit1$bgm1, predY=probit1$preds)
-probit3$VP<-computeVariancePartitioning(probit1$bfm1, group=c(), groupnames=c())
-probit3$postBeta<-getPostEstimate(probit1$bfm1, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
-probit3$GradientNT.AM<-constructGradient(bf.m1, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "NT-MD")))
-probit3$GradientCT.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "CT-MD")))
-probit3$GradientO3.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "Org_3")))
-probit13$GradientO6.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "Org_6")))
-probit3$predAMGradientNT<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)# rename things!!
-probit3$predAMGradientCT<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
-probit3$predAMGradientO3<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
-probit3$predAMGradientO6<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
-
-Y2<-as.matrix(t(b.Ydat))
-Y2[Y2==0]<-NA
-# lognormal poisson:
-b.m1<-Hmsc(Y=as.matrix(t(b.Ydat)), XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="lognormal poisson")
-b.m1<-sampleMcmc(b.m.lp, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
-
-OmegaCor.lp=computeAssociations(bf.lp)
-probit1$OmegaCor.probit=computeAssociations(probit1$bfm1)
-probit1$preds<-computePredictedValues(probit1$bfmq)
-probit1$MF<-evaluateModelFit(probit1$bgm1, predY=probit1$preds)
-probit1$VP<-computeVariancePartitioning(probit1$bfm1, group=c(), groupnames=c())
-probit1$postBeta<-getPostEstimate(probit1$bfm1, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
-probit3$GradientNT.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "NT-MD")))
-probit3$GradientCT.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "CT-MD")))
-probit3$GradientO3.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "Org_3")))
-probit13$GradientO6.AM<-constructGradient(bf.lp, focalVariable="NLFA.AM.Fungi", non.focalVariables=list("OM..."=list(1),"pH"=list(1), "System.loc"=list(3, "Org_6")))
-probit3$predAMGradientNT<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)# rename things!!
-probit3$predAMGradientCT<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
-probit3$predAMGradientO3<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
-probit3$predAMGradientO6<-predict(probit3$GradientNT.AM, XData=probit3$GradientNT.AM, studyDesign= , ranLevels=, expected=TRUE)
 
 # Analysis 4: Effect of Glyphosate on bacterial+fungal networks
 # use fungal + bacterial dataset
