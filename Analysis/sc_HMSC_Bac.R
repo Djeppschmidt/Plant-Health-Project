@@ -20,10 +20,11 @@ f.RH<-subset_samples(fun, Soil_Zone=="rhizosphere"&Location=="Beltsville")
 
 # To Do List:
 # return to see table mergning for the metadata     [_]
+# sort code into proper files                       [_]
 # Q1 Probit model                                   [X]
-# Q1 Lognormal Model                                [_]
-# Q1 (For Q2) Lognormal Model - Farming System      [_]
-# Q1 (For Q2) Probit model - Farming System         [_]
+# Q1 Lognormal Model                                [X]
+# Q1 (For Q2) Lognormal Model - Farming System      [X]
+# Q1 (For Q2) Probit model - Farming System         [X]
 # Q1 (For Q3) Lognormal Model + AM fungi            [_]
 # Q1 (For Q3) Probit Model + AM fungi               [_]
   
@@ -34,6 +35,8 @@ f.RH<-subset_samples(fun, Soil_Zone=="rhizosphere"&Location=="Beltsville")
 
 # Q3 Predict Env. Gradient (Global)                 [_]
 # Q3 Compute variation explained by AM (Global)     [_]
+
+# Final Syntax Check                                [_]
 
 # reconcile fungal and bacterial sample abundance
     # create unique sample ID to match bac to fungal samples ...
@@ -144,10 +147,10 @@ probitQ1$bf<-sampleMcmc(b.m.lp, thin=2, samples=1000, transient=500, nChains=2, 
 
 # examine correlation matrix for probit model
 # get outputs for HMSC analysis
-probitQ1$OmegaCor.probit=computeAssociations(probit1$bf)
-probitQ1$preds<-computePredictedValues(probit1$bf)
-probitQ1$MF<-evaluateModelFit(probit1$bf, predY=probitQ1$preds)
-probitQ1$VP<-computeVariancePartitioning(probit1$bf, group=c(1,1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))
+probitQ1$OmegaCor.probit=computeAssociations(probitQ1$bf)
+probitQ1$preds<-computePredictedValues(probitQ1$bf)
+probitQ1$MF<-evaluateModelFit(probitQ1$bf, predY=probitQ1$preds)
+probitQ1$VP<-computeVariancePartitioning(probit1$bf, group=c(1,1,1,2,1,3,3,4,4,4,4), groupnames=c("Expt", "System", "Edaphic", "Random"))
 probitQ1$postBeta<-getPostEstimate(probit1$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 
 saveRDS(probitQ1, "Data/ProbitModel1Dat.RDS") # plot on local machine
@@ -167,10 +170,46 @@ LogPoiQ1$bf.lp<-Hmsc(Y=G.Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=stud
 LogPoiQ1$OmegaCor.lp=computeAssociations(LogPoiQ1$bf.lp)
 LogPoiQ1$preds<-computePredictedValues(LogPoiQ1$bf.lp)
 LogPoiQ1$MF<-evaluateModelFit(LogPoiQ1$bf.lp, predY=LogPoiQ1$preds)
-LogPoiQ1$VP<-computeVariancePartitioning(LogPoiQ1$bf.lp, group=c(1,1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))
+LogPoiQ1$VP<-computeVariancePartitioning(LogPoiQ1$bf.lp, group=c(1,1,1,2,1,3,3,4,4,4,4), groupnames=c("Expt", "System", "Edaphic", "Random"))
 LogPoiQ1$postBeta<-getPostEstimate(LogPoiQ1$bf.lp, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 
+# Q2: effect of farming system: same as above but model removes Farming system 
 
+GQ2.XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM...
+# first do probit model ####
+GQ2.bf<-Hmsc(Y=Ydat, XData=XDat, XFormula=GQ2.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
+probitGQ2<-NULL
+probitGQ2$bf<-sampleMcmc(GQ2.bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
+
+# examine correlation matrix for probit model
+# get outputs for HMSC analysis
+probitGQ2$OmegaCor.probit=computeAssociations(probitGQ2$bf)
+probitGQ2$preds<-computePredictedValues(probitGQ2$bf)
+probitGQ2$MF<-evaluateModelFit(probitGQ2$bf, predY=probitGQ2$preds)
+probitGQ2$VP<-computeVariancePartitioning(probitGQ2$bf, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))
+probitGQ2$postBeta<-getPostEstimate(probitGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+
+saveRDS(probitGQ2, "Data/ProbitModel2_GDat.RDS") # plot on local machine
+
+#probit1$Gradient.pH<-constructGradient()
+#robit1$Gradient.OM<-constructGradient()
+#probit1$predpHGradient<-predict()
+#probit1$predOMGradient<-predict()
+
+LogPoiQ2<-NULL
+bf.lp<-Hmsc(Y=G.Y2, XData=XDat1, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="lognormal poisson") # use same formulas as previous
+LogPoiQ2$bf.lp<-Hmsc(Y=G.Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
+
+
+LogPoiGQ2$OmegaCor.lp=computeAssociations(LogPoiGQ2$bf.lp)
+LogPoiGQ2$preds<-computePredictedValues(LogPoiGQ2$bf.lp)
+LogPoiGQ2$MF<-evaluateModelFit(LogPoiGQ2$bf.lp, predY=LogPoiGQ2$preds)
+LogPoiGQ2$VP<-computeVariancePartitioning(LogPoiGQ2$bf.lp, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))
+LogPoiGQ2$postBeta<-getPostEstimate(LogPoiGQ2$bf.lp, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+
+saveRDS(LogPoiGQ2, "Data/LogPoiModel2_GDat.RDS")
+
+# construct gradients post if necessary (all data is in the objects created in the main analysis)
 # is this necessary? 
 LogPoiQ1$Gradient.pH<-constructGradient(bf.lp, focalVariable="pH", non.focalVariables=list("OM..."=list(1), "System.loc"=list(3, "NT")))
 LogPoiQ1$Gradient.OM<-constructGradient(bf.lp, focalVariable="OM...", non.focalVariables=list("pH"=list(1), "System.loc"=list(3, "NT")))
