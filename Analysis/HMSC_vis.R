@@ -16,6 +16,13 @@
 setwd()
 
 
+# to do list:
+
+# separate bac, fun and fun-bac interactions    [_]
+# separate + / - interactions                   [_]
+
+
+
 # scratch
 # probit model (update to reflect the actual analysis?)
 RH.Ydat<-as.data.frame(as.matrix(otu_table(RH)))# dim(b.Ydat)

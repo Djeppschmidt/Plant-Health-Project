@@ -11,7 +11,9 @@ library(stringr)
 library(Model.Microbiome)
 
 # To Do List:
-# return to see table merging for the metadata      [_]
+# return to see table merging for the metadata      [_] ***
+        # filter archaea / mitochondria             [_]
+        # data for all samples                      [_]
 # sort code into proper files                       [X]
 # Q1 Probit model                                   [X]
 # Q1 Lognormal Model                                [X]
@@ -28,9 +30,9 @@ library(Model.Microbiome)
 # Q3 Predict Env. Gradient (Global)                 [_] # can do this in post
 # Q3 Compute variation explained by AM (Global)     [X]
 
-# Final Syntax Check                                [_]
-# pilot run functions on local computer             [_]
-# move visualization script to visfile              [_]
+# Final Syntax Check                                [_] 
+# pilot run functions on local computer             [_] ***
+# move visualization script to visfile              [X]
 
 
 # Analysis 1: Role of AMF abundance on microbial networks; Drivers of +/- interaciton networks ; Exploratory analysis of bacterial and fungal competition or symbiosis
@@ -42,19 +44,19 @@ fb.RH<-tax_glom(fb.RH, taxrank="Genus")
 Ydat<-as.data.frame(as.matrix(otu_table(fb.RH)))
 XData<-as.data.frame(as.matrix(sample_data(fb.RH)), stringsAsFactors = TRUE)
 XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
-rownames(b.XDat1)<-c(1:nrow(b.XDat1))
-b.XDat1$Sample<-as.factor(c(1:nrow(b.XDat1)))
-b.XFormula= ~Glyphosphate_Treatment + genotype + System.loc + crop + pH + OM...
-studyDesign = data.frame("Sample"=b.XDat1$Sample,"Sampling_date"=b.XDat1$Sampling_date, "year"=b.XDat1$year)
+rownames(XDat1)<-c(1:nrow(XDat1))
+XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
+XFormula= ~Glyphosphate_Treatment + genotype + System.loc + crop + pH + OM...
+studyDesign = data.frame("Sample"=XDat1$Sample,"Sampling_date"=XDat1$Sampling_date, "year"=XDat1$year, "Plot"=XDat1$Loc_plot_ID)
 rL1 <- HmscRandomLevel(units=studyDesign$Sample)
 rL2 <- HmscRandomLevel(units=studyDesign$Loc_plot_ID)
 rL3 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
 rL4 <- HmscRandomLevel(units=studyDesign$year) # second random level is sampling 
 # final model should have pH and organic matter as random levels
 # first do probit model ####
-Q1.bfm1<-Hmsc(Y=as.matrix(t(b.Ydat)), XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
+Q1.bfm1<-Hmsc(Y=as.matrix(t(Ydat)), XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit") # chech XDat1 to make sure all data is there before running!
 probitQ1<-NULL
-probitQ1$bf<-sampleMcmc(b.m.lp, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
+probitQ1$bf<-sampleMcmc(Q1.bfm1, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
 # examine correlation matrix for probit model
 # get outputs for HMSC analysis
