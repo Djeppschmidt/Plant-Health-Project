@@ -1,5 +1,6 @@
 # reconcile metadata
 library(dplyr)
+library(plyr)
 PLFA<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/Hmsc_reproducible/PLFA.csv")) # from excel sheets provided by Jude Maul
 Chem<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/key.csv")) # sheet labeled key
 CFU<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/CFU.csv"))
@@ -163,21 +164,39 @@ Chem$system[Chem$system=="Org6"]<-"Org_6"
 Chem$system[Chem$system=="Org3"]<-"Org_3"
 Chem$Plot.number<-as.character(Chem$Plot.number)
 
+# divide meta into 2013 and 14                                  [X]
+# summarize om and PH by plot number in 2014                    [X]
+# merge meta 2013 with Chem at sample level                     [X]
+# merge 2014 by plot ID averaging values from Chem by plot ID   [X]
+# merge 2013 with 2014                                          [X]
+# update bacteria annotation from scinet                        [_]
+
+meta2013<-meta[meta$year==2013,]
+meta2014<-meta[meta$year==2014,]
+plyr::ddply(Chem, c("Plot.number"), summarise,
+      OM... = mean(OM...),
+      pH = mean(pH))->Chem2014
+
+#Chem2014
+
+meta2014<-merge(meta2014, Chem2014, by.x="Loc_plot_ID", by.y="Plot.number")
+
 Chem$MergeC<-paste0(Chem$Plot.number, Chem$Glyphosphate_Treatment, Chem$system, Chem$Microplot.treatment, Chem$crop,sep="")
+#Chem$Merge2014<-paste0(Chem$Plot.number, Chem$Glyphosphate_Treatment, Chem$system, Chem$Microplot.treatment,sep="")
 meta$MergeC<-paste0(meta$Loc_plot_ID, meta$Glyphosphate_Treatment, meta$System.loc, meta$genotype, meta$crop, sep="")
 
-setdiff(Chem$MergeC, meta$MergeC) # should be = 0
+setdiff(Chem$MergeC, meta2013$MergeC) # should be = 0
 
-Chem2<-merge(meta, Chem, by="MergeC", all.x=TRUE)
-RH.Chem2<-Chem2[Chem2$Soil_Zone=="rhizosphere",]
-
+Chem2<-merge(meta2013, Chem, by="MergeC", all.x=TRUE)
+RH.Chem3<-bind_rows(RH.Chem2, meta2014)
+RH.Chem3<-RH.Chem3[RH.Chem3$Soil_Zone=="rhizosphere",]
 
 # merge into phyloseq
 RH.meta<-left_join(NLFA2, RH.PLFA2)
-RH.meta<-left_join(RH.meta, RH.Chem2)
+RH.meta<-left_join(RH.meta, RH.Chem3)
 
-B.meta<-left_join(PLFA2,Chem2) # 
-rownames(B.meta)<-B.meta$X.SampleID
+#B.meta<-left_join(PLFA2,RH.Chem3) # 
+#rownames(B.meta)<-B.meta$X.SampleID
 
 rownames(RH.meta)<-RH.meta$X.SampleID
 RH<-merge_phyloseq(RH, sample_data(RH.meta))
@@ -264,7 +283,7 @@ f2.RH<-prune_taxa(taxa_sums(f2.RH)>0, f2.RH)
 
 # merge OTU tables with names & make final phyloseq object for analysis
 
-fb.RH<-merge_phyloseq(b.RH, f2.RH)
+fb.RH<-merge_phyloseq(b2.RH, f2.RH)
 fb.RH
 
 saveRDS(fb.RH, "Data/fb_Rhizosphere_2020.RDS")
