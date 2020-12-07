@@ -17,12 +17,67 @@ setwd()
 
 
 # to do list:
-
+# construct taxa metadata structure             [_]
 # separate bac, fun and fun-bac interactions    [_]
 # separate + / - interactions                   [_]
+# get metrics for each network                  [_]
+# make network using igraph                     [_]
 
+# correlation structure: use logical 0 = false; 1=True thus: T+T=2 T+F=1 F+F=0 (or just code directly as logical)
+# need info for network Q2: ID of taxa (fungi vs bacteria), Effect of factor on taxa; Delta interaction
+# association network for bacteria-bacteria ([,1]=b & [,2]=b)*mean
+# 
+# 
 
+# imaginary run 1 without effect of farming system 
+# each of these are stored as matrices
+# need to make a matching matrix of b-b and b-f and f-f interactions for each ...
+# test case:
+# 4X4 matrix
 
+mat<-matrix(nrow=4, ncol=4)
+rownames(mat)<-c("one", "two", "three", "four")
+colnames(mat)<-c("one", "two", "three", "four")
+grouping<-c(1,1,2,2)
+mat[grouping==1, grouping==1]<-FALSE
+mat[grouping==2, grouping==1]<-TRUE
+mat[grouping==1, grouping==2]<-TRUE
+mat[grouping==2, grouping==2]<-FALSE
+mat
+
+# test case 2:
+
+identical(colnames(t.ct$LogPoi$OmegaCor.lp[[1]]$mean), taxa_names(CT.101c)) # true
+identical(taxa_names(CT.101c), rownames(tax_table(CT.101c)))# true
+# therefore order is preserved ...
+
+function(x){
+  net<-x$LogPoi$OmegaCor.lp[[1]]$mean
+  BBnet<-net
+  BBnet<-BBnet[BBnet,]
+}
+
+# make BB table
+
+# make FF table
+
+# make B-F table
+tax_table(CT.101c)[,"Kingdom"]
+
+# now make an index of taxon kingdom
+s<-tax_table(CT.101c)[,1]
+s[s=="Bacteria"]<-0
+s
+CT$LogPoi$OmegaCor.lp[[3]]$support[1,1] # support (significance)
+CT$LogPoi$OmegaCor.lp[[3]]$mean # mean (effect size)
+
+# imaginary run 2 with effect of farming system
+CT2$LogPoi$OmegaCor.lp[[3]]$support # support (significance)
+CT2$LogPoi$OmegaCor.lp[[3]]$mean # mean (effect size)
+
+if(names(CT2))
+
+View(as.data.frame(as.matrix(((t.ct$LogPoi$OmegaCor.lp[[2]]$support>0.95)+(t.ct$LogPoi$OmegaCor.lp[[2]]$support<(1-0.95))>0)*t.ct$LogPoi$OmegaCor.lp[[2]]$mean)))
 # scratch
 # probit model (update to reflect the actual analysis?)
 RH.Ydat<-as.data.frame(as.matrix(otu_table(RH)))# dim(b.Ydat)

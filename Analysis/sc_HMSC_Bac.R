@@ -151,66 +151,88 @@ saveRDS(LogPoiGQ3, "Data/LogPoiModel3_Gdat.RDS")
 # Analysis 2: Effect of farming system on Competition and Cooperation of bacteria vs fungi
     # Use combined dataset
     # Separate datasets into objects for each Farming System and each plot
-Org6.107<-subset_samples(fb.RH, Loc_plot_ID=="107") # plots: 107, 109, 110, 204, 205, 206, 308, 310, 311, 412, 413, 415, 
-Org6.109<-subset_samples(fb.RH, Loc_plot_ID=="109")
-Org6.110<-subset_samples(fb.RH, Loc_plot_ID=="110")
-Org6.204<-subset_samples(fb.RH, Loc_plot_ID=="204")
-Org6.205<-subset_samples(fb.RH, Loc_plot_ID=="205")
-Org6.206<-subset_samples(fb.RH, Loc_plot_ID=="206")
-Org6.308<-subset_samples(fb.RH, Loc_plot_ID=="308")
-Org6.310<-subset_samples(fb.RH, Loc_plot_ID=="310")
-Org6.311<-subset_samples(fb.RH, Loc_plot_ID=="311")
-Org6.412<-subset_samples(fb.RH, Loc_plot_ID=="412")
-Org6.413<-subset_samples(fb.RH, Loc_plot_ID=="413")
-Org6.415<-subset_samples(fb.RH, Loc_plot_ID=="415")
+# automation / Q2-3 probit & poisson
+# plots: 107, 109, 110, 204, 205, 206, 308, 310, 311, 412, 413, 415,
+Org6.107s<-subset_samples(test, Loc_plot_ID=="107")  # 1 crop: soy
+Org6.109c<-subset_samples(test, Loc_plot_ID=="109")  # 1 crop: corn
+Org6.110c<-subset_samples(test, Loc_plot_ID=="110"&crop=="corn")  # 2 crops
+Org6.110s<-subset_samples(test, Loc_plot_ID=="110"&crop=="soy")
+Org6.204s<-subset_samples(test, Loc_plot_ID=="204")  # 1 crop: soy
+Org6.205c<-subset_samples(test, Loc_plot_ID=="205")  # 1 crop: corn
+Org6.206s<-subset_samples(test, Loc_plot_ID=="206"&crop=="soy")  # 2 crops 
+Org6.206c<-subset_samples(test, Loc_plot_ID=="206"&crop=="corn")
+Org6.308c<-subset_samples(test, Loc_plot_ID=="308"&crop=="corn")  # 2 crops
+Org6.308s<-subset_samples(test, Loc_plot_ID=="308"&crop=="soy")
+Org6.310c<-subset_samples(test, Loc_plot_ID=="310")  # 1 crop: corn
+Org6.311s<-subset_samples(test, Loc_plot_ID=="311")  # 1 crop: soy
+Org6.412c<-subset_samples(test, Loc_plot_ID=="412")  # 1 crop: corn
+Org6.413s<-subset_samples(test, Loc_plot_ID=="413")  # 1 crop: soy
+Org6.415c<-subset_samples(test, Loc_plot_ID=="415"&crop=="corn")  # 2 crops
+Org6.415s<-subset_samples(test, Loc_plot_ID=="415"&crop=="soy")  # 2 crops
+list.Org6c<-list(Org6.109c, Org6.110c, Org6.205c, Org6.206c, Org6.308c, Org6.310c, Org6.412c, Org6.415c)
+list.Org6s<-list(Org6.107s, Org6.110s, Org6.204s, Org6.206s, Org6.308s, Org6.311s, Org6.413s, Org6.415s)
 # plots: 113, 114, 115, 209, 210, 211, 301, 302, 303, 409, 410, 411, 
-Org_3.113<-subset_samples(fb.RH, Loc_plot_ID=="113")
-Org_3.114<-subset_samples(fb.RH, Loc_plot_ID=="114")
-Org_3.115<-subset_samples(fb.RH, Loc_plot_ID=="115")
-Org_3.209<-subset_samples(fb.RH, Loc_plot_ID=="209")
-Org_3.210<-subset_samples(fb.RH, Loc_plot_ID=="210")
-Org_3.211<-subset_samples(fb.RH, Loc_plot_ID=="211")
-Org_3.301<-subset_samples(fb.RH, Loc_plot_ID=="301")
-Org_3.302<-subset_samples(fb.RH, Loc_plot_ID=="302")
-Org_3.303<-subset_samples(fb.RH, Loc_plot_ID=="303")
-Org_3.409<-subset_samples(fb.RH, Loc_plot_ID=="409")
-Org_3.410<-subset_samples(fb.RH, Loc_plot_ID=="410")
-Org_3.411<-subset_samples(fb.RH, Loc_plot_ID=="411")
+Org_3.113c<-subset_samples(test, Loc_plot_ID=="113"&crop=="corn") # 2 crops
+Org_3.113s<-subset_samples(test, Loc_plot_ID=="113"&crop=="soy") 
+Org_3.114s<-subset_samples(test, Loc_plot_ID=="114") # soy
+Org_3.115c<-subset_samples(test, Loc_plot_ID=="115") # corn
+Org_3.209c<-subset_samples(test, Loc_plot_ID=="209") # corn
+Org_3.210s<-subset_samples(test, Loc_plot_ID=="210") # soy
+Org_3.211s<-subset_samples(test, Loc_plot_ID=="211"&crop=="soy") # 2 crops
+Org_3.211c<-subset_samples(test, Loc_plot_ID=="211"&crop=="corn")
+Org_3.301c<-subset_samples(test, Loc_plot_ID=="301") # corn
+Org_3.302s<-subset_samples(test, Loc_plot_ID=="302"&crop=="soy") # 2 crops
+Org_3.302c<-subset_samples(test, Loc_plot_ID=="302"&crop=="corn")
+Org_3.303s<-subset_samples(test, Loc_plot_ID=="303") # soy
+Org_3.409s<-subset_samples(test, Loc_plot_ID=="409") # soy
+Org_3.410c<-subset_samples(test, Loc_plot_ID=="410") # corn
+Org_3.411c<-subset_samples(test, Loc_plot_ID=="411"&crop=="corn") # 2 crops
+Org_3.411s<-subset_samples(test, Loc_plot_ID=="411"&crop=="soy") 
+list.Org3c<-list(Org_3.113c, Org_3.115c, Org_3.209c, Org_3.211c, Org_3.301c, Org_3.302c, Org_3.410c, Org_3.411c)
+list.Org3s<-list(Org_3.113s, Org_3.114s, Org_3.210s, Org_3.211s, Org_3.302s, Org_3.303s, Org_3.409s, Org_3.411s)
+# plots: 103, 104, 117, 215, 216, 217, 304, 305, 306, 403, 407, 408, 
+NT.103s<-subset_samples(test, Loc_plot_ID=="103"&crop=="soy") # 2 
+NT.103c<-subset_samples(test, Loc_plot_ID=="103"&crop=="corn")
+NT.104s<-subset_samples(test, Loc_plot_ID=="104") # s
+NT.117c<-subset_samples(test, Loc_plot_ID=="117") # c
+NT.215c<-subset_samples(test, Loc_plot_ID=="215") # c
+NT.216c<-subset_samples(test, Loc_plot_ID=="216"&crop=="corn") # 2
+NT.216s<-subset_samples(test, Loc_plot_ID=="216"&crop=="soy")
+NT.217s<-subset_samples(test, Loc_plot_ID=="217") # s
+NT.304s<-subset_samples(test, Loc_plot_ID=="304") # s
+NT.305s<-subset_samples(test, Loc_plot_ID=="305"&crop=="soy") # 2
+NT.305c<-subset_samples(test, Loc_plot_ID=="305"&crop=="corn")
+NT.306c<-subset_samples(test, Loc_plot_ID=="306") # c
+NT.403c<-subset_samples(test, Loc_plot_ID=="403") # c
+NT.407s<-subset_samples(test, Loc_plot_ID=="407"&crop=="soy") # 2
+NT.407c<-subset_samples(test, Loc_plot_ID=="407"&crop=="corn")
+NT.408s<-subset_samples(test, Loc_plot_ID=="408") # s
 
-NT.103<-subset_samples(fb.RH, Loc_plot_ID=="103") # plots: 103, 104, 117, 215, 216, 217, 304, 305, 306, 403, 407, 408, 
-NT.104<-subset_samples(fb.RH, Loc_plot_ID=="104")
-NT.117<-subset_samples(fb.RH, Loc_plot_ID=="117")
-NT.215<-subset_samples(fb.RH, Loc_plot_ID=="215")
-NT.216<-subset_samples(fb.RH, Loc_plot_ID=="216")
-NT.217<-subset_samples(fb.RH, Loc_plot_ID=="217")
-NT.304<-subset_samples(fb.RH, Loc_plot_ID=="304")
-NT.305<-subset_samples(fb.RH, Loc_plot_ID=="305")
-NT.306<-subset_samples(fb.RH, Loc_plot_ID=="306")
-NT.403<-subset_samples(fb.RH, Loc_plot_ID=="403")
-NT.407<-subset_samples(fb.RH, Loc_plot_ID=="407")
-NT.408<-subset_samples(fb.RH, Loc_plot_ID=="408")
+list.NTc<-list(NT.103c, NT.117c, NT.215c, NT.216c, NT.305c, NT.306c, NT.403c, NT.407c)
+list.NTs<-list(NT.103s, NT.104s, NT.216s, NT.217s, NT.304s, NT.305s, NT.407s, NT.408s)
+# plots: 101, 102, 116, 212, 213, 214, 313, 314, 315, 404,405, 406,
+CT.101s<-subset_samples(test, Loc_plot_ID=="101"&crop=="soy") # 2
+CT.101c<-subset_samples(test, Loc_plot_ID=="101"&crop=="corn")
+CT.102s<-subset_samples(test, Loc_plot_ID=="102") # S
+CT.116c<-subset_samples(test, Loc_plot_ID=="116") # c
+CT.212s<-subset_samples(test, Loc_plot_ID=="212") # s
+CT.213s<-subset_samples(test, Loc_plot_ID=="213"&crop=="soy") # 2
+CT.213c<-subset_samples(test, Loc_plot_ID=="213"&crop=="corn")
+CT.214c<-subset_samples(test, Loc_plot_ID=="214") # c
+CT.313c<-subset_samples(test, Loc_plot_ID=="313") # c
+CT.314s<-subset_samples(test, Loc_plot_ID=="314"&crop=="soy") # 2
+CT.314c<-subset_samples(test, Loc_plot_ID=="314"&crop=="corn")
+CT.315s<-subset_samples(test, Loc_plot_ID=="315") # s
+CT.404c<-subset_samples(test, Loc_plot_ID=="404") # c
+CT.405s<-subset_samples(test, Loc_plot_ID=="405") # s
+CT.406s<-subset_samples(test, Loc_plot_ID=="406"&crop=="soy") # 2
+CT.406c<-subset_samples(test, Loc_plot_ID=="406"&crop=="corn")
 
-CT.101<-subset_samples(fb.RH, Loc_plot_ID=="101") # plots: 101, 102, 116, 212, 213, 214, 313, 314, 315, 404,405, 406,
-CT.102<-subset_samples(fb.RH, Loc_plot_ID=="102") 
-CT.116<-subset_samples(fb.RH, Loc_plot_ID=="116") 
-CT.212<-subset_samples(fb.RH, Loc_plot_ID=="212") 
-CT.213<-subset_samples(fb.RH, Loc_plot_ID=="213") 
-CT.214<-subset_samples(fb.RH, Loc_plot_ID=="214") 
-CT.313<-subset_samples(fb.RH, Loc_plot_ID=="313") 
-CT.314<-subset_samples(fb.RH, Loc_plot_ID=="314") 
-CT.315<-subset_samples(fb.RH, Loc_plot_ID=="315") 
-CT.404<-subset_samples(fb.RH, Loc_plot_ID=="404") 
-CT.405<-subset_samples(fb.RH, Loc_plot_ID=="405") 
-CT.406<-subset_samples(fb.RH, Loc_plot_ID=="406") 
-
-
-    # Format data for HMSC
-    # Model 1: All edaphic factors as predictors (date/time as random)
-    # Apply the model to each dataset
-list.CT<-list(CT.101, CT.102, CT.116, CT.212, CT.213, CT.214, CT.313, CT.315, CT.404, CT.405, CT.406)
-list.NT<-list(NT.103, NT.104, NT.117, NT.215, NT.216, NT.217, NT.304, NT.305, NT.306, NT.403, NT.407, NT.408)
-list.Org3<-list(Org_3.113, Org_3.114, Org_3.115, Org_3.209, Org_3.210, Org_3.211, Org_3.301, Org_3.302, Org_3.303)
-list.Org6<-list(Org_6.107, Org_6.109, Org_6.110, Org_6.204, Org_6.205, Org_6.206, Org_6.308, Org_6.310, Org_6.311, Org_6.412, Org_6.413, Org_6.415)
+# Format data for HMSC
+# Model 1: All edaphic factors as predictors (date/time as random)
+# Apply the model to each dataset
+list.CTc<-list(CT.101c, CT.116c, CT.213c, CT.214c, CT.313c, CT.404c, CT.406c)
+list.CTs<-list(CT.101s, CT.102s, CT.212s, CT.213s, CT.315s, CT.405s, CT.406s)
 runHMSC<-function(list, method=NULL){
   out<-sapply(list, applyHMSC, simplify=F, USE.NAMES = T, method)
   out
@@ -224,17 +246,17 @@ applyHMSC<-function(ps, method){
   XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
   rownames(XDat1)<-c(1:nrow(XDat1))
   if(is.null(method)){
-    XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM...}
-  if(method=="AM"){
-    XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM... + NLFA.AM.Fungi
-  }
+    XFormula= ~Glyphosphate_Treatment + genotype + pH + OM...}
+  if(!is.null(method)){if(method=="AM"){
+    XFormula= ~Glyphosphate_Treatment + genotype + pH + OM... + NLFA.AM.Fungi
+  }}
   XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
   studyDesign = data.frame("Sample"=b.XDat1$Sample,"Sampling_date"=XDat1$Sampling_date, "year"=XDat1$year)
   rL1 <- HmscRandomLevel(units=studyDesign$Sample)
   rL2 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
-  rL3 <- HmscRandomLevel(units=studyDesign$year)
+  #rL3 <- HmscRandomLevel(units=studyDesign$year)
   # first do probit model ####
-  bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit") 
+  bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit") 
   out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
   
   # examine correlation matrix for probit model
@@ -242,8 +264,8 @@ applyHMSC<-function(ps, method){
   out$probitGQ2$OmegaCor.probit=computeAssociations(out$probitGQ2$bf)
   out$probitGQ2$preds<-computePredictedValues(out$probitGQ2$bf)
   out$probitGQ2$MF<-evaluateModelFit(out$probitGQ2$bf, predY=out$probitGQ2$preds)
-  if(is.null(method)){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
-  if(method=="AM"){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
+  if(is.null(method)){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,2,2,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
+  if(method=="AM"){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,2,2,3,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
   out$probitGQ2$postBeta<-getPostEstimate(out$probitGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
   
   Y2<-as.matrix(Ydat) # global OTU table
@@ -253,13 +275,14 @@ applyHMSC<-function(ps, method){
   out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoiGQ2$bf)
   out$LogPoi$preds<-computePredictedValues(out$LogPoiGQ2$bf)
   out$LogPoi$MF<-evaluateModelFit(out$LogPoiGQ2$bf, predY=out$LogPoiGQ2$preds)
-  if(is.null(method)){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
-  if(method=="AM"){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
+  if(is.null(method)){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
+  if(method=="AM"){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
   out$LogPoi$postBeta<-getPostEstimate(out$LogPoiGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
   out
 }
 
-CTQ2<-runHMSC(list.CT)
+CTc<-runHMSC(list.CTc)
+CTs<-runHMSC(list.CTs)
 NTQ2<-runHMSC(list.NT)
 O3Q2<-runHMSC(list.Org3)
 O6Q2<-runHMSC(list.Org6)
