@@ -233,76 +233,93 @@ CT.406c<-subset_samples(test, Loc_plot_ID=="406"&crop=="corn")
 # Apply the model to each dataset
 list.CTc<-list(CT.101c, CT.116c, CT.213c, CT.214c, CT.313c, CT.404c, CT.406c)
 list.CTs<-list(CT.101s, CT.102s, CT.212s, CT.213s, CT.315s, CT.405s, CT.406s)
-runHMSC<-function(list, method=NULL){
-  out<-sapply(list, applyHMSC, simplify=F, USE.NAMES = T, method)
-  out
-}
-applyHMSC<-function(ps, method){
+applyHMSC<-function(ps){
   out<-NULL
-  out$probit<-NULL
-  out$LogPoi<-NULL
+  
   Ydat<-as.data.frame(as.matrix(otu_table(ps)))
   XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
   XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
   rownames(XDat1)<-c(1:nrow(XDat1))
-  if(is.null(method)){
-    XFormula= ~Glyphosphate_Treatment + genotype + pH + OM...}
-  if(!is.null(method)){if(method=="AM"){
-    XFormula= ~Glyphosphate_Treatment + genotype + pH + OM... + NLFA.AM.Fungi
-  }}
+  
+  # continue as usual:
+  XFormula1= ~Glyphosphate_Treatment + genotype # crop not necessary, metadata not necessary ~Glyphosphate_Treatment + genotype + pH + OM...
+  
+  XFormula2= ~Glyphosphate_Treatment + genotype + NLFA.AM.Fungi # crop not necessary
+  
   XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
-  studyDesign = data.frame("Sample"=b.XDat1$Sample,"Sampling_date"=XDat1$Sampling_date, "year"=XDat1$year)
-  rL1 <- HmscRandomLevel(units=studyDesign$Sample)
-  rL2 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
+  studyDesign = data.frame("Sample"=XDat1$Sample,"Sampling_date"=XDat1$Sampling_date)#, "year"=XDat1$year)
+  
   #rL3 <- HmscRandomLevel(units=studyDesign$year)
   # first do probit model ####
-  bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit") 
-  out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
+  #old<-Sys.time()
+  run<-function(Ydat, XDat, XFormula, studyDesign, AM){
+    out<-NULL
+    out$probit<-NULL
+    out$LogPoi<-NULL
+    rL1 <- HmscRandomLevel(units=studyDesign$Sample)
+    rL2 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
+    bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit")#, "year"=rL3), distr="probit") 
+    out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    
+    # examine correlation matrix for probit model
+    # get outputs for HMSC analysis
+    out$probit$OmegaCor.probit=computeAssociations(out$probit$bf)
+    print("probit1")
+    out$probit$preds<-computePredictedValues(out$probit$bf)
+    print("preds1")
+    out$probit$MF<-evaluateModelFit(out$probit$bf, predY=out$probit$preds)
+    print("MF1")
+    print(out$probit$bf$X)
+    if(AM==0){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2), groupnames=c("Glyphosate", "Genotype"))} # removed last 3 from vector so that random accounts for removing the year from the model, and remove 1 from expt to account for removing crop from the model
+    if(AM==1){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2,3), groupnames=c("Glyphosate", "Genotype", "AMF"))}
+    
+    out$probit$postBeta<-getPostEstimate(out$probit$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+    
+    Y2<-as.matrix(Ydat) # global OTU table
+    Y2[Y2==0]<-NA # remove zero counts
+    out$LogPoi$bf<-Hmsc(Y=Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="poisson") # use same formulas as previous
+    out$LogPoi$bf<-sampleMcmc(out$LogPoi$bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    print("bf Completed") # troubleshooting
+    out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoi$bf)
+    print("associations Completed") # troubleshooting
+    out$LogPoi$preds<-computePredictedValues(out$LogPoi$bf)
+    print("preds Completed") # troubleshooting
+    out$LogPoi$MF<-evaluateModelFit(out$LogPoi$bf, predY=out$LogPoi$preds)
+    print("model fit Completed") # troubleshooting
+    if(AM==0){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2), groupnames=c("Glyphosate", "Genotype"))}
+    if(AM==1){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2,3), groupnames=c("Glyphosate","Genotype", "AMF"))}
+    print("VP Completed") # troubleshooting
+    out$LogPoi$postBeta<-getPostEstimate(out$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+    print("Completed")
+    out
+  }
   
-  # examine correlation matrix for probit model
-  # get outputs for HMSC analysis
-  out$probitGQ2$OmegaCor.probit=computeAssociations(out$probitGQ2$bf)
-  out$probitGQ2$preds<-computePredictedValues(out$probitGQ2$bf)
-  out$probitGQ2$MF<-evaluateModelFit(out$probitGQ2$bf, predY=out$probitGQ2$preds)
-  if(is.null(method)){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,2,2,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
-  if(method=="AM"){out$probitGQ2$VP<-computeVariancePartitioning(out$probitGQ2$bf, group=c(1,1,1,2,2,3,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
-  out$probitGQ2$postBeta<-getPostEstimate(out$probitGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
-  
-  Y2<-as.matrix(Ydat) # global OTU table
-  Y2[Y2==0]<-NA # remove zero counts
-  out$LogPoi$bf<-Hmsc(Y=Y2, XData=b.XDat, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
-  out$LogPoi$bf<-sampleMcmc(out$LogPoiQ2$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
-  out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoiGQ2$bf)
-  out$LogPoi$preds<-computePredictedValues(out$LogPoiGQ2$bf)
-  out$LogPoi$MF<-evaluateModelFit(out$LogPoiGQ2$bf, predY=out$LogPoiGQ2$preds)
-  if(is.null(method)){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,2,2,3,3,3,3), groupnames=c("Expt", "Edaphic", "Random"))}
-  if(method=="AM"){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoiGQ2$bf, group=c(1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))}
-  out$LogPoi$postBeta<-getPostEstimate(out$LogPoiGQ2$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+  out$REF<-run(Ydat=Ydat, XDat=XDat1, XFormula=XFormula1, studyDesign=studyDesign, AM=0)
+  out$AM<-run(Ydat=Ydat, XDat=XDat1, XFormula=XFormula2, studyDesign=studyDesign, AM=1)
+  out$ps<-ps
   out
 }
 
 CTc<-runHMSC(list.CTc)
 CTs<-runHMSC(list.CTs)
-NTQ2<-runHMSC(list.NT)
-O3Q2<-runHMSC(list.Org3)
-O6Q2<-runHMSC(list.Org6)
+NTc<-runHMSC(list.NTc)
+NTs<-runHMSC(list.NTs)
+O3c<-runHMSC(list.Org3c)
+O3s<-runHMSC(list.Org3s)
+O6c<-runHMSC(list.Org6c)
+O6s<-runHMSC(list.Org6s)
 
-saveRDS(CTQ2, "Data/Q2CT.RDS")
-saveRDS(NTQ2, "Data/Q2NT.RDS")
-saveRDS(O3Q2, "Data/Q2O2.RDS")
-saveRDS(O6Q2, "Data/Q2O6.RDS")
+saveRDS(CTc, "Data/CTc.RDS")
+saveRDS(NTc, "Data/NTc.RDS")
+saveRDS(O3c, "Data/O3c.RDS")
+saveRDS(O6c, "Data/O6c.RDS")
 
-CTQ3<-runHMSC(list.CT, method="AM")
-NTQ3<-runHMSC(list.NT,method="AM")
-O3Q3<-runHMSC(list.Org3, method="AM")
-O6Q3<-runHMSC(list.Org6,method="AM")
-
-saveRDS(CTQ3, "Data/Q3CT.RDS")
-saveRDS(NTQ3, "Data/Q3NT.RDS")
-saveRDS(O3Q3, "Data/Q3O2.RDS")
-saveRDS(O6Q3, "Data/Q3O6.RDS")
-
+saveRDS(CTs, "Data/CTs.RDS")
+saveRDS(NTs, "Data/NTs.RDS")
+saveRDS(O3s, "Data/O3s.RDS")
+saveRDS(O6s, "Data/O6s.RDS")
 q()
+
 # Analysis 3: Effect of AMF Abundance on bacterial and fungal networks
 # format data for HMSC
 # Model 1: All edaphic factors - AMF as predictors (date/time as random)

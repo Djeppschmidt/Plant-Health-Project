@@ -51,14 +51,68 @@ identical(colnames(t.ct$LogPoi$OmegaCor.lp[[1]]$mean), taxa_names(CT.101c)) # tr
 identical(taxa_names(CT.101c), rownames(tax_table(CT.101c)))# true
 # therefore order is preserved ...
 
-function(x){
-  net<-x$LogPoi$OmegaCor.lp[[1]]$mean
-  BBnet<-net
-  BBnet<-BBnet[BBnet,]
+# calculate without AM fungi the number of significant BB FF and FB interactions
+AssocaitionSummary<-function(x, method){
+  out<-matrix(nrow=3, ncol=1)
+  t<-tax_table(x$ps)
+  rownames(out)<-c("BB", "FF", "FB")
+  if(method=="AM"){
+  BBmat<-x$AM$LogPoi$OmegaCor.lp[[1]]$mean
+  BBmat[t=="Bacteria",t=="Fungi"]<-0
+  BBmat[t=="Fungi",t=="Bacteria"]<-0
+  BBmat[t=="Fungi",t=="Fungi"]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is significant BB interaction
+  out[1,1]<-sum(BBmat)/2
+  
+  BBmat<-x$AM$LogPoi$OmegaCor.lp[[1]]$mean
+  BBmat[t=="Bacteria",t=="Fungi"]<-0
+  BBmat[t=="Fungi",t=="Bacteria"]<-0
+  BBmat[t=="Bacteria",t=="Bacteria"]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is singificant FF interaction
+  out[2,1]<-sum(BBmat)/2
+  
+  BBmat<-x$AM$LogPoi$OmegaCor.lp[[1]]$mean
+  BBmat[t=="Fungi",t=="Fungi"]<-0
+  BBmat[t=="Bacteria",t=="Bacteria"]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+  BBmat[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is singificant FB of BF interaction
+  out[3,1]<-sum(BBmat)/2
+  }
+  
+  if(method=="REF"){
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is significant BB interaction
+    out[1,1]<-sum(BBmat)/2
+    
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is singificant FF interaction
+    out[2,1]<-sum(BBmat)/2
+    
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1 # now we have a table where 1 is singificant FB of BF interaction
+    out[3,1]<-sum(BBmat)/2
+  }
+ out
 }
 
 # make BB table
 
+net<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
+BBnet<-net
+BBnet<-BBnet[BBnet,]
 # make FF table
 
 # make B-F table
