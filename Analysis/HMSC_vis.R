@@ -357,6 +357,8 @@ run.AssociationSummary(CTQ2, method="REF", type="positive")
 # sig- = AM may mediate competition among pairs
 # flip+ = AM may mediate facilitation among pairs
 # flip- = AM may mediate competition among pairs
+
+# still need to add control for main effect of AM on each bacterium ...
 DeltaInteractionSummary<-function(x, type){
   out<-c(NA,NA,NA)
   t<-tax_table(x$ps)[,"Kingdom"]
@@ -1147,8 +1149,88 @@ DeltaInteractionSummary<-function(x, type){
   out
 }
 
-InteractNetwork<-function(){}
-# make BB table
+InteractNetwork<-function(a, direction){
+  # define interaction network, with 
+  if(direction=="positive"){
+    x<-a$REF$probit$OmegaCor.probit[[2]]$support
+   # x[x<0]<-0
+    y<-a$REF$LogPoi$OmegaCor.lp[[2]]$support
+    #y[y<0]<-0
+    z<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    z[z<0]<-0
+    c<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+  }
+  
+  if(direction=="negative"){
+    x<-a$REF$probit$OmegaCor.probit[[2]]$support
+    #x[x>0]<-0
+    y<-a$REF$LogPoi$OmegaCor.lp[[2]]$support
+    #y[y>0]<-0
+    z<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    z[z>0]<-0
+    c<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+  }
+  
+  nets<-function(x, y, z, direction, num=150){
+    require(phyloseq)
+    require(igraph)
+    out<-NULL
+    i=1
+    c[c<1]<-0
+    n<-graph_from_incidence_matrix(c)
+    while(ecount(n)<num){
+      t<-z
+      #t<-cor(t)
+      if(direction=="positive"){t[(x<i & y<i)]<-0 # need both directions?
+      }
+      if(direction=="negative"){t[x>(1-i) & y>(1-i)]<-0 # need both directions?
+      }
+      #t[t>i]<-1
+      n<-graph_from_incidence_matrix(t)
+      i=i-0.001
+    }
+    cfg<-cluster_fast_greedy(as.undirected(n))
+    out$Dynamic<-NULL
+    out$Dynamic$cfg<-cfg
+    out$Dynamic$n<-n
+    #plot(cfg, as.undirected(n), layout=layout_nicely(n), vertex.label=NA, main="Dynamic", vertex.size=10)
+    table<-matrix(nrow=2,ncol=4)
+    colnames(table)<-c("Mean_Closeness", "Mean_Degree", "Modularity", "Threshold")
+    rownames(table)<-c("Dynamic", "Static")
+    table[1,1]<-mean(closeness(n))
+    table[1,2]<-mean(degree(n))
+    table[1,3]<-modularity(n, membership(cfg))
+    table[1,4]<-i
+    # second table
+    t<-z
+    t[x<0.9&y<0.9]<-0
+    t[x>0.9&y>0.9]<-1
+    n<-graph_from_incidence_matrix(t)
+    cfg<-cluster_fast_greedy(as.undirected(n))
+    table[2,1]<-mean(closeness(n))
+    table[2,2]<-mean(degree(n))
+    table[2,3]<-modularity(n, membership(cfg))
+    table[2,4]<-0.95
+    #plot(cfg, as.undirected(n), layout=layout_nicely(n), vertex.label=NA, main="Static", vertex.size=10)
+    out$stats<-table
+    out$Static<-NULL
+    out$Static$cfg<-cfg
+    out$Static$n<-n
+    #out$taxcor<-melt(cor(t(as.data.frame(as.matrix(otu_table(ps))))))
+    #out$taxcor$value[is.na(out$taxcor$value)]<-0
+    out
+  }
+  
+  nets(x, y, z, direction, num=150)
+  
+}
+
+b<-InteractNetwork(CTQ2[[1]], direction="positive")
+plot(b$Dynamic$cfg, as.undirected(b$Dynamic$n), layout=layout_nicely(b$Dynamic$n),
+     vertex.label=NA, main="Dynamic", vertex.size=10)
+plot(b$Static$cfg, as.undirected(b$Static$n), layout=layout_nicely(b$Static$n),
+     vertex.label=NA, main="Dynamic", vertex.size=10)
+b$stats# make BB table
 
 net<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
 BBnet<-net

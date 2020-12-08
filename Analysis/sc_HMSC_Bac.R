@@ -240,11 +240,14 @@ applyHMSC<-function(ps){
   XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
   XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
   rownames(XDat1)<-c(1:nrow(XDat1))
-  
+  XDat1$pH<-as.character(XDat1$pH)
+  XDat1$OM...<-as.character(XDat1$OM...)
+  XDat1$pH[is.na(XDat1$pH)]<-0
+  XDat1$OM...[is.na(XDat1$OM...)]<-0
   # continue as usual:
-  XFormula1= ~Glyphosphate_Treatment + genotype # crop not necessary, metadata not necessary ~Glyphosphate_Treatment + genotype + pH + OM...
+  XFormula1= ~Glyphosphate_Treatment # consider genotype later crop not necessary, metadata not necessary ~Glyphosphate_Treatment + genotype + pH + OM...
   
-  XFormula2= ~Glyphosphate_Treatment + genotype + NLFA.AM.Fungi # crop not necessary
+  XFormula2= ~Glyphosphate_Treatment + NLFA.AM.Fungi # crop not necessary
   
   XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
   studyDesign = data.frame("Sample"=XDat1$Sample,"Sampling_date"=XDat1$Sampling_date)#, "year"=XDat1$year)
@@ -270,8 +273,8 @@ applyHMSC<-function(ps){
     out$probit$MF<-evaluateModelFit(out$probit$bf, predY=out$probit$preds)
     print("MF1")
     print(out$probit$bf$X)
-    if(AM==0){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2), groupnames=c("Glyphosate", "Genotype"))} # removed last 3 from vector so that random accounts for removing the year from the model, and remove 1 from expt to account for removing crop from the model
-    if(AM==1){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2,3), groupnames=c("Glyphosate", "Genotype", "AMF"))}
+    if(AM==0){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1), groupnames=c("Glyphosate"))} # removed last 3 from vector so that random accounts for removing the year from the model, and remove 1 from expt to account for removing crop from the model
+    if(AM==1){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2), groupnames=c("Glyphosate", "AMF"))}
     
     out$probit$postBeta<-getPostEstimate(out$probit$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
     
@@ -286,8 +289,8 @@ applyHMSC<-function(ps){
     print("preds Completed") # troubleshooting
     out$LogPoi$MF<-evaluateModelFit(out$LogPoi$bf, predY=out$LogPoi$preds)
     print("model fit Completed") # troubleshooting
-    if(AM==0){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2), groupnames=c("Glyphosate", "Genotype"))}
-    if(AM==1){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2,3), groupnames=c("Glyphosate","Genotype", "AMF"))}
+    if(AM==0){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1), groupnames=c("Glyphosate"))}
+    if(AM==1){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2), groupnames=c("Glyphosate", "AMF"))}
     print("VP Completed") # troubleshooting
     out$LogPoi$postBeta<-getPostEstimate(out$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
     print("Completed")
