@@ -411,6 +411,7 @@ DeltaInteractionSummary<-function(x, type){
     delta[AMmat==0 & Refmat==1]<-1
     delta[AMmat==0 & Refmat==0]<-0
     delta[AMmat==1 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-0
     out[1]<-(sum(delta)-length(t))/2
     
     # positive FF interactions
@@ -463,6 +464,7 @@ DeltaInteractionSummary<-function(x, type){
     delta[AMmat==0 & Refmat==1]<-1
     delta[AMmat==0 & Refmat==0]<-0
     delta[AMmat==1 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-0
     out[2]<-(sum(delta)-length(t))/2
     
     # positive FB interactions
@@ -511,6 +513,7 @@ DeltaInteractionSummary<-function(x, type){
     delta[AMmat==0 & Refmat==1]<-1
     delta[AMmat==0 & Refmat==0]<-0
     delta[AMmat==1 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-0
     out[3]<-(sum(delta)-length(t))/2
   }
   
@@ -562,9 +565,10 @@ DeltaInteractionSummary<-function(x, type){
     AMmat[BBAM==0 & BBAM2==0]<-0
     
     delta<-AMmat
-    delta[AMat==1 & Refmat==0]<-1
-    delta[AMat==0 & Refmat==0]<-0
-    delta[AMat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-1
+    delta[AMmat==0 & Refmat==0]<-0
+    delta[AMmat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==1]<-0
     out[1]<-(sum(delta)-length(t))/2
     
     # positive FF interactions
@@ -614,9 +618,10 @@ DeltaInteractionSummary<-function(x, type){
     AMmat[BBAM==0 & BBAM2==0]<-0
     
     delta<-AMmat
-    delta[AMat==1 & Refmat==0]<-1
-    delta[AMat==0 & Refmat==0]<-0
-    delta[AMat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-1
+    delta[AMmat==0 & Refmat==0]<-0
+    delta[AMmat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==1]<-0
     out[2]<-(sum(delta)-length(t))/2
     
     # positive FB interactions
@@ -662,9 +667,10 @@ DeltaInteractionSummary<-function(x, type){
     AMmat[BBAM==0 & BBAM2==0]<-0
     
     delta<-AMmat
-    delta[AMat==1 & Refmat==0]<-1
-    delta[AMat==0 & Refmat==0]<-0
-    delta[AMat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==0]<-1
+    delta[AMmat==0 & Refmat==0]<-0
+    delta[AMmat==0 & Refmat==1]<-0
+    delta[AMmat==1 & Refmat==1]<-0
     out[3]<-(sum(delta)-length(t))/2
   }
   # new negative associations that are dependent on AM abundance
@@ -716,9 +722,10 @@ DeltaInteractionSummary<-function(x, type){
   AMmat[BBAM==0 & BBAM2==0]<-0
   
   delta<-AMmat
-  delta[AMat==1 & Refmat==0]<-1
-  delta[AMat==0 & Refmat==0]<-0
-  delta[AMat==0 & Refmat==1]<-0
+  delta[AMmat==1 & Refmat==0]<-1
+  delta[AMmat==0 & Refmat==0]<-0
+  delta[AMmat==0 & Refmat==1]<-0
+  delta[AMmat==1 & Refmat==1]<-0
   out[1]<-sum(delta)/2
     
   # negative FF interactions
@@ -771,6 +778,7 @@ DeltaInteractionSummary<-function(x, type){
   delta[AMat==1 & Refmat==0]<-1
   delta[AMat==0 & Refmat==0]<-0
   delta[AMat==0 & Refmat==1]<-0
+  delta[AMat==1 & Refmat==1]<-0
   out[2]<-sum(delta)/2
   
   # negative FB interactions
@@ -819,17 +827,327 @@ DeltaInteractionSummary<-function(x, type){
   delta[AMat==1 & Refmat==0]<-1
   delta[AMat==0 & Refmat==0]<-0
   delta[AMat==0 & Refmat==1]<-0
+  delta[AMat==1 & Refmat==1]<-0
   out[3]<-sum(delta)/2
   }
   if(type=="flip+"){
+    # negative BB interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat2[t=="Bacteria",t=="Fungi"]<-0
+    BBmat2[t=="Fungi",t=="Bacteria"]<-0
+    BBmat2[t=="Fungi",t=="Fungi"]<-0
     
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only negative
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBAM[t=="Bacteria",t=="Fungi"]<-0
+    BBAM[t=="Fungi",t=="Bacteria"]<-0
+    BBAM[t=="Fungi",t=="Fungi"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean<0]<-0
+    BBAM2[t=="Bacteria",t=="Fungi"]<-0
+    BBAM2[t=="Fungi",t=="Bacteria"]<-0
+    BBAM2[t=="Fungi",t=="Fungi"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only positive
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==1]<-1
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==0]<-0
+    out[1]<-sum(delta)/2
+    
+    # negative FF interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat2[t=="Bacteria",t=="Fungi"]<-0
+    BBmat2[t=="Fungi",t=="Bacteria"]<-0
+    BBmat2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only negative
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBAM[t=="Bacteria",t=="Fungi"]<-0
+    BBAM[t=="Fungi",t=="Bacteria"]<-0
+    BBAM[t=="Bacteria",t=="Bacteria"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+      BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean<0]<-0
+    BBAM2[t=="Bacteria",t=="Fungi"]<-0
+    BBAM2[t=="Fungi",t=="Bacteria"]<-0
+    BBAM2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only positive
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==1]<-1
+    out[2]<-sum(delta)/2
+    
+    # negative FB interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean>0]<-0
+    BBmat2[t=="Fungi",t=="Fungi"]<-0
+    BBmat2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only negative
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBAM[t=="Fungi",t=="Fungi"]<-0
+    BBAM[t=="Bacteria",t=="Bacteria"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean<0]<-0
+    BBAM2[t=="Fungi",t=="Fungi"]<-0
+    BBAM2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only positive
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==1]<-1
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==0]<-0
+    out[3]<-sum(delta)/2
   }
   if(type=="flip-"){
+    # negative BB interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat2[t=="Bacteria",t=="Fungi"]<-0
+    BBmat2[t=="Fungi",t=="Bacteria"]<-0
+    BBmat2[t=="Fungi",t=="Fungi"]<-0
+    
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only positive
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBAM[t=="Bacteria",t=="Fungi"]<-0
+    BBAM[t=="Fungi",t=="Bacteria"]<-0
+    BBAM[t=="Fungi",t=="Fungi"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean>0]<-0
+    BBAM2[t=="Bacteria",t=="Fungi"]<-0
+    BBAM2[t=="Fungi",t=="Bacteria"]<-0
+    BBAM2[t=="Fungi",t=="Fungi"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only negative
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==1]<-1
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==0]<-0
+    out[1]<-sum(delta)/2
+    
+    # negative FF interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat[t=="Bacteria",t=="Fungi"]<-0
+    BBmat[t=="Fungi",t=="Bacteria"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat2[t=="Bacteria",t=="Fungi"]<-0
+    BBmat2[t=="Fungi",t=="Bacteria"]<-0
+    BBmat2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only positive
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBAM[t=="Bacteria",t=="Fungi"]<-0
+    BBAM[t=="Fungi",t=="Bacteria"]<-0
+    BBAM[t=="Bacteria",t=="Bacteria"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean>0]<-0
+    BBAM2[t=="Bacteria",t=="Fungi"]<-0
+    BBAM2[t=="Fungi",t=="Bacteria"]<-0
+    BBAM2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only negative
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==1]<-1
+    out[2]<-sum(delta)/2
+    
+    # negative FB interactions
+    BBmat<-x$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$REF$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat[x$REF$LogPoi$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat[t=="Fungi",t=="Fungi"]<-0
+    BBmat[t=="Bacteria",t=="Bacteria"]<-0
+    # now we have a table where 1 is significant BB interaction
+    BBmat2<-x$REF$probit$OmegaCor.lp[[2]]$mean
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support>0.05 & x$REF$probit$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$support<0.05 | x$REF$probit$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBmat2[x$REF$probit$OmegaCor.lp[[2]]$mean<0]<-0
+    BBmat2[t=="Fungi",t=="Fungi"]<-0
+    BBmat2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    Refmat<-BBmat2
+    Refmat[BBmat==1 & BBmat2==1]<-1 # only positive
+    Refmat[BBmat==1 & BBmat2==0]<-0
+    Refmat[BBmat==0 & BBmat2==1]<-0
+    Refmat[BBmat==0 & BBmat2==0]<-0
+    
+    
+    BBAM<-x$AM$LogPoi$OmegaCor.lp[[2]]$mean
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.05 & x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.95]<-0
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$support<0.05 | x$AM$LogPoi$OmegaCor.lp[[2]]$support>0.95]<-1
+    BBAM[x$AM$LogPoi$OmegaCor.lp[[2]]$mean>0]<-0
+    BBAM[t=="Fungi",t=="Fungi"]<-0
+    BBAM[t=="Bacteria",t=="Bacteria"]<-0
+    
+    BBAM2<-x$AM$probit$OmegaCor.probit[[2]]$mean
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support>0.05 & x$AM$probit$OmegaCor.probit[[2]]$support<0.95]<-0
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$support<0.05 | x$AM$probit$OmegaCor.probit[[2]]$support>0.95]<-1
+    BBAM2[x$AM$probit$OmegaCor.probit[[2]]$mean>0]<-0
+    BBAM2[t=="Fungi",t=="Fungi"]<-0
+    BBAM2[t=="Bacteria",t=="Bacteria"]<-0
+    
+    AMmat<-BBAM2
+    AMmat[BBAM==1 & BBAM2==1]<-1 # only negaitve
+    AMmat[BBAM==1 & BBAM2==0]<-0
+    AMmat[BBAM==0 & BBAM2==1]<-0
+    AMmat[BBAM==0 & BBAM2==0]<-0
+    
+    delta<-AMmat
+    delta[AMat==1 & Refmat==1]<-1
+    delta[AMat==0 & Refmat==0]<-0
+    delta[AMat==0 & Refmat==1]<-0
+    delta[AMat==1 & Refmat==0]<-0
+    out[3]<-sum(delta)/2
     
   }
+  colnames(out)<-c("BB", "FF", "FB")
+  out
 }
 
-InteactNetwork<-function(){}
+InteractNetwork<-function(){}
 # make BB table
 
 net<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
