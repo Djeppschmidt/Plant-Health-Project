@@ -30,8 +30,8 @@ library(Model.Microbiome)
 # Q3 Predict Env. Gradient (Global)                 [_] # can do this in post
 # Q3 Compute variation explained by AM (Global)     [X]
 
-# Final Syntax Check                                [_] 
-# pilot run functions on local computer             [_] ***
+# Final Syntax Check                                [X] 
+# pilot run functions on local computer             [X] ***
 # move visualization script to visfile              [X]
 
 
@@ -63,8 +63,8 @@ probitQ1$bf<-sampleMcmc(Q1.bfm1, thin=2, samples=1000, transient=500, nChains=2,
 probitQ1$OmegaCor.probit=computeAssociations(probitQ1$bf)
 probitQ1$preds<-computePredictedValues(probitQ1$bf)
 probitQ1$MF<-evaluateModelFit(probitQ1$bf, predY=probitQ1$preds)
-probitQ1$VP<-computeVariancePartitioning(probit1$bf, group=c(1,1,1,2,1,3,3,4,4,4,4), groupnames=c("Expt", "System", "Edaphic", "Random"))
-probitQ1$postBeta<-getPostEstimate(probit1$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+probitQ1$VP<-computeVariancePartitioning(probitQ1$bf, group=c(1,1,1,2,1,3,3), groupnames=c("Expt", "System", "Edaphic"))
+probitQ1$postBeta<-getPostEstimate(probitQ1$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 
 saveRDS(probitQ1, "Data/ProbitModel1Dat.RDS") # plot on local machine
 
@@ -76,13 +76,13 @@ G.Y2<-as.matrix(t(Ydat)) # global OTU table
 G.Y2[G.Y2==0]<-NA # remove zero counts
 
 LogPoiQ1<-NULL
-LogPoiQ1$bf<-Hmsc(Y=G.Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
+LogPoiQ1$bf<-Hmsc(Y=G.Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
 LogPoiQ1$bf<-sampleMcmc(b.m.lp, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
 LogPoiQ1$OmegaCor.lp=computeAssociations(LogPoiQ1$bf)
 LogPoiQ1$preds<-computePredictedValues(LogPoiQ1$bf)
 LogPoiQ1$MF<-evaluateModelFit(LogPoiQ1$bf, predY=LogPoiQ1$preds)
-LogPoiQ1$VP<-computeVariancePartitioning(LogPoiQ1$bf, group=c(1,1,1,2,1,3,3,4,4,4,4), groupnames=c("Expt", "System", "Edaphic", "Random"))
+LogPoiQ1$VP<-computeVariancePartitioning(LogPoiQ1$bf, group=c(1,1,1,2,1,3,3), groupnames=c("Expt", "System", "Edaphic"))
 LogPoiQ1$postBeta<-getPostEstimate(LogPoiQ1$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 
 saveRDS(LogPoiQ1, "Data/LogPoiModel1Dat.RDS")
@@ -91,7 +91,7 @@ saveRDS(LogPoiQ1, "Data/LogPoiModel1Dat.RDS")
 
 GQ2.XFormula= ~Glyphosphate_Treatment + genotype + crop + pH + OM...
 # first do probit model ####
-GQ2.bf<-Hmsc(Y=Ydat, XData=XDat, XFormula=GQ2.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
+GQ2.bf<-Hmsc(Y=Ydat, XData=XDat1, XFormula=GQ2.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
 probitGQ2<-NULL
 probitGQ2$bf<-sampleMcmc(GQ2.bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
@@ -105,9 +105,9 @@ probitGQ2$postBeta<-getPostEstimate(probitGQ2$bf, parName="Beta") #beta is speci
 
 saveRDS(probitGQ2, "Data/ProbitModel2_GDat.RDS") # plot on local machine
 
-LogPoiQ2<-NULL
-LogPoiQ2$bf<-Hmsc(Y=G.Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
-LogPoiGQ2$bf<-sampleMcmc(LogPoiQ2$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
+LogPoiGQ2<-NULL
+LogPoiGQ2$bf<-Hmsc(Y=G.Y2, XData=XDat1, XFormula=GQ2.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
+LogPoiGQ2$bf<-sampleMcmc(LogPoiGQ2$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
 LogPoiGQ2$OmegaCor.lp=computeAssociations(LogPoiGQ2$bf.lp)
 LogPoiGQ2$preds<-computePredictedValues(LogPoiGQ2$bf.lp)
@@ -121,28 +121,28 @@ saveRDS(LogPoiGQ2, "Data/LogPoiModel2_GDat.RDS")
 GQ3.XFormula= ~Glyphosphate_Treatment + genotype + System.loc + crop + pH + OM... + NLFA.AM.Fungi
 
 probitGQ3<-NULL
-probitGQ3$bf<-Hmsc(Y=Ydat, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
+probitGQ3$bf<-Hmsc(Y=Ydat, XData=XDat1, XFormula=GQ3.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2, "year"=rL3), distr="probit")
 probitGQ3$bf<-sampleMcmc(probitGQ3$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100)
 
 # examine correlation matrix for probit model
 # get outputs for HMSC analysis
 probitGQ3$OmegaCor.probit=computeAssociations(probitGQ3$bf)
 probitGQ3$preds<-computePredictedValues(probitGQ3$bf)
-probitGQ3$MF<-evaluateModelFit(probitGQ3$bf, predY=probitQ1$preds)
-probitGQ3$VP<-computeVariancePartitioning(probitGQ3$bf, group=c(1,1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic","AMF", "Random"))
+probitGQ3$MF<-evaluateModelFit(probitGQ3$bf, predY=probitGQ3$preds)
+probitGQ3$VP<-computeVariancePartitioning(probitGQ3$bf, group=c(1,1,1,1,1,2,2,3), groupnames=c("Expt", "Edaphic","AMF"))
 probitGQ3$postBeta<-getPostEstimate(probitGQ3$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 
 saveRDS(probitGQ3, "Data/ProbitModel3_GDat.RDS") # plot on local machine
 
 LogPoiGQ3<-NULL
-LogPoiQ3$bf<-Hmsc(Y=G.Y2, XData=b.XDat, XFormula=b.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
+LogPoiGQ3$bf<-Hmsc(Y=G.Y2, XData=XDat1, XFormula=GQ3.XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Loc_plot_ID"=rL2, "Sampling_date"=rL3), distr="poisson") # use same formulas as previous
 LogPoiGQ3$bf<-sampleMcmc(LogPoiGQ3$bf, thin=2, samples=1000, transient=500, nChains=2, nParallel=2, verbose=100) # check on previous sampleMCMC commands !!!!
 
 #### Edit to make work for logpoisson model !!!!
 LogPoiGQ3$OmegaCor.lp=computeAssociations(LogPoiGQ3$bf)
 LogPoiGQ3$preds<-computePredictedValues(LogPoiGQ3$bf)
 LogPoiGQ3$MF<-evaluateModelFit(LogPoiGQ3$bf, predY=LogPoiGQ3$preds)
-LogPoiGQ3$VP<-computeVariancePartitioning(LogPoiGQ3$bf, group=c(1,1,1,1,1,2,2,3,4,4,4,4), groupnames=c("Expt", "Edaphic", "AMF", "Random"))
+LogPoiGQ3$VP<-computeVariancePartitioning(LogPoiGQ3$bf, group=c(1,1,1,1,1,2,2,3), groupnames=c("Expt", "Edaphic", "AMF"))
 LogPoiGQ3$postBeta<-getPostEstimate(LogPoiGQ3$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
 saveRDS(LogPoiGQ3, "Data/LogPoiModel3_Gdat.RDS")
 
@@ -342,7 +342,7 @@ q()
 # identity of taxa
 # ID of high centrality score taxa in network
 # effect of cropping system on AMF and selected highly central taxa
-
+# (Already finished as part of other functions!!)
 ####### End of File #########
 
 

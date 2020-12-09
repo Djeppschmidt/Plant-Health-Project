@@ -21,7 +21,7 @@ setwd()
 # separate bac, fun and fun-bac interactions    [X]
 # separate + / - interactions                   [X]
 # get metrics for each network                  [X]
-# make network using igraph                     [_]
+# make network using igraph                     [X]
 # make delta network function                   [_]
 # global model                                  [_]
 
@@ -1153,22 +1153,34 @@ InteractNetwork<-function(a, direction){
   # define interaction network, with 
   if(direction=="positive"){
     x<-a$REF$probit$OmegaCor.probit[[2]]$support
-   # x[x<0]<-0
+    x[lower.tri(x)]<-0
+   # x<-na.omit(melt(x))
     y<-a$REF$LogPoi$OmegaCor.lp[[2]]$support
-    #y[y<0]<-0
+    y[lower.tri(y)]<-0
+   # y<-na.omit(melt(y))
     z<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
     z[z<0]<-0
+    z[lower.tri(z)]<-0
+   # z<-na.omit(melt(z))
     c<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    c[lower.tri(c)]<-0
+    #c<-na.omit(melt(c))
   }
   
   if(direction=="negative"){
     x<-a$REF$probit$OmegaCor.probit[[2]]$support
-    #x[x>0]<-0
+    x[lower.tri(x)]<-0
+    #x<-na.omit(melt(x))
     y<-a$REF$LogPoi$OmegaCor.lp[[2]]$support
-    #y[y>0]<-0
+    y[lower.tri(y)]<-0
+   # y<-na.omit(melt(y))
     z<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
     z[z>0]<-0
+    z[lower.tri(z)]<-0
+   # z<-na.omit(melt(z))
     c<-a$REF$LogPoi$OmegaCor.lp[[2]]$mean
+    c[lower.tri(c)]<-0
+    #c<-na.omit(melt(c))
   }
   
   nets<-function(x, y, z, direction, num=150){
@@ -1181,10 +1193,11 @@ InteractNetwork<-function(a, direction){
     while(ecount(n)<num){
       t<-z
       #t<-cor(t)
-      if(direction=="positive"){t[(x<i & y<i)]<-0 # need both directions?
-      }
-      if(direction=="negative"){t[x>(1-i) & y>(1-i)]<-0 # need both directions?
-      }
+      t[((1-i)<x & x<i & (1-i)<y & y<i)]<-0
+    #  if(direction=="positive"){t[(z<0)]<-0 
+      #}
+    #  if(direction=="negative"){t[z>0]<-0 
+     # }
       #t[t>i]<-1
       n<-graph_from_incidence_matrix(t)
       i=i-0.001
@@ -1203,14 +1216,14 @@ InteractNetwork<-function(a, direction){
     table[1,4]<-i
     # second table
     t<-z
-    t[x<0.9&y<0.9]<-0
-    t[x>0.9&y>0.9]<-1
+    t[x<0.5&y<0.5]<-0
+    t[x>0.5&y>0.5]<-1
     n<-graph_from_incidence_matrix(t)
     cfg<-cluster_fast_greedy(as.undirected(n))
     table[2,1]<-mean(closeness(n))
     table[2,2]<-mean(degree(n))
     table[2,3]<-modularity(n, membership(cfg))
-    table[2,4]<-0.95
+    table[2,4]<-0.5
     #plot(cfg, as.undirected(n), layout=layout_nicely(n), vertex.label=NA, main="Static", vertex.size=10)
     out$stats<-table
     out$Static<-NULL
@@ -1227,14 +1240,20 @@ InteractNetwork<-function(a, direction){
 
 b<-InteractNetwork(CTQ2[[1]], direction="positive")
 plot(b$Dynamic$cfg, as.undirected(b$Dynamic$n), layout=layout_nicely(b$Dynamic$n),
-     vertex.label=NA, main="Dynamic", vertex.size=10)
+     vertex.label=NA, main="Dynamic (-)", vertex.size=10)
 plot(b$Static$cfg, as.undirected(b$Static$n), layout=layout_nicely(b$Static$n),
-     vertex.label=NA, main="Dynamic", vertex.size=10)
+     vertex.label=NA, main="Static (-)", vertex.size=10)
 b$stats# make BB table
 
-net<-x$REF$LogPoi$OmegaCor.lp[[1]]$mean
-BBnet<-net
-BBnet<-BBnet[BBnet,]
+
+
+
+#################
+
+plotVariancePartitioning(CTQ2[[1]]$REF$LogPoi$bf, VP=CTQ2[[1]]$REF$LogPoi$VP)
+plotVariancePartitioning(CTQ2[[1]]$AM$LogPoi$bf, VP=CTQ2[[1]]$AM$LogPoi$VP)
+
+# scratch :
 # make FF table
 
 # make B-F table
