@@ -1,5 +1,248 @@
-# PHP Anchoring Study
+# central question: does using sequencing depth replace sampling effort for anchoring?
+# add model in one case for total seqs captured ... 
 
+# GLUSEEN
+# import data
+getwd()
+setwd("")
+GLUFUN_RAW<-readRDS("/Users/dietrich/Documents/GitHub/Anchoring/Data/GLUSEEN/GLUSEENFungi_2020.RDS") # updated dada2 run for fungi. Remove potchesftroom from the analysis leaves 4 cities/reps of each land-use
+GLUBac_RAW<-readRDS("/Users/dietrich/Documents/GitHub/Anchoring/Data/GLUSEEN/Bac16s_RAW.RDS")
+meta<-as.data.frame(as.matrix(sample_data(GLUBac_RAW)))
+
+GLU_meta<-as.data.frame(as.matrix(read.csv("/Users/dietrich/Documents/GitHub/Anchoring/Data/GLUSEEN/QPCR_Data_100615.csv")))
+head(GLU_meta)
+GLU_meta$Sample_ID<-paste0("GLU0", c(GLU_meta$A))
+GLU_meta$Sample_ID
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU0100"]<-"GLU100"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU01"]<-"GLU001"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU02"]<-"GLU002"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU03"]<-"GLU003"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU04"]<-"GLU004"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU05"]<-"GLU005"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU06"]<-"GLU006"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU07"]<-"GLU007"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU08"]<-"GLU008"
+GLU_meta$Sample_ID[GLU_meta$Sample_ID=="GLU09"]<-"GLU009"
+rownames(GLU_meta)<-GLU_meta$Sample_ID
+GLU_meta<-left_join(meta, GLU_meta, by="Sample_ID")
+View(GLU_meta)
+rownames(GLU_meta)<-GLU_meta$Sample_ID
+sample_data(GLUFUN_RAW)<-GLU_meta
+sample_data(GLUBac_RAW)<-GLU_meta
+sample_data(GLUFUN_RAW)$SeqDepth<-sample_sums(GLUFUN_RAW)
+sample_data(GLUBac_RAW)$SeqDepth<-sample_sums(GLUBac_RAW)
+
+# scale by qpcr
+QScale<-function(ps, type){
+  
+  if(type=="B"){
+    scale<-as.numeric(as.character(sample_data(ps)$X16s))
+    out<-Qscale(ps, val=1, scale)
+    }
+  if(type=="F"){
+    scale<-as.numeric(as.character(sample_data(ps)$its))
+    out<-Qscale(ps, val=1, scale)
+  }
+  out
+}
+Qscale<-function(ps, val, scale){
+  scaled<-data.frame(mapply(`*`, data.frame(t(as.matrix(otu_table(transform_sample_counts(ps, function(x) x/sum(x)))))), scale * val))# sample_data(ps)$val))
+  names<-rownames(data.frame(t(as.matrix(otu_table(ps)))))
+  rownames(scaled)<-names
+  scaled<-round(scaled)
+  
+  p2<-ps
+  otu_table(p2)<- otu_table(scaled, taxa_are_rows=T)
+  p2
+
+}
+
+bGLU.Q<-QScale(GLUBac_RAW, type="B") # quantitatively scaled bacteria
+fGLU.Q<-QScale(GLUFUN_RAW, type="F") # quantitatively scaled fungi
+# scale by RA
+fGLU.RA<-transform_sample_counts(GLUBac_RAW, function(x) x/sum(x))
+bGLU.RA<-transform_sample_counts(GLUFUN_RAW, function(x) x/sum(x))
+# run HMSC on each
+GLU<-list(bGLU.Q, bGLU.RA, bGLU.RAW, fGLU.Q, fGLU.RA, fGLU.RAW)
+
+# GLUSEEN HMSC study
+
+applyGLHMSC<-function(ps){
+  out<-NULL
+  
+  Ydat<-as.data.frame(as.matrix(otu_table(ps)))
+  XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
+  XDat1<-XData[,c(2,3,6,7,9:29, 31,32)] # subset data to what I need for this run!!
+  rownames(XDat1)<-c(1:nrow(XDat1))
+  XDat1$pH<-as.character(XDat1$pH)
+  XDat1$OM...<-as.character(XDat1$OM)
+
+  XFormula1= ~ CITY + TRT + pH + OM # consider genotype later crop not necessary, metadata not necessary ~Glyphosphate_Treatment + genotype + pH + OM...
+  XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
+  studyDesign = data.frame("Sample"=XDat1$Sample)
+  run<-function(Ydat, XDat, XFormula, studyDesign){
+    out<-NULL
+    out$probit<-NULL
+    out$LogPoi<-NULL
+    rL1 <- HmscRandomLevel(units=studyDesign$Sample)
+    rL2 <- HmscRandomLevel(units=studyDesign$SeqDepth) # add this in metadata!!
+    bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit")
+    out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    
+    # examine correlation matrix for probit model
+    # get outputs for HMSC analysis
+    out$probit$OmegaCor.probit=computeAssociations(out$probit$bf)
+    out$probit$preds<-computePredictedValues(out$probit$bf)
+    out$probit$MF<-evaluateModelFit(out$probit$bf, predY=out$probit$preds)
+    out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2,3,4), groupnames=c("City", "Land-use", "pH", "OM")) 
+    out$probit$postBeta<-getPostEstimate(out$probit$bf, parName="Beta") 
+    
+    Y2<-as.matrix(Ydat) # global OTU table
+    Y2[Y2==0]<-NA # remove zero counts
+    out$LogPoi$bf<-Hmsc(Y=Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="poisson") # use same formulas as previous
+    out$LogPoi$bf<-sampleMcmc(out$LogPoi$bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    print("bf Completed") # troubleshooting
+    out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoi$bf)
+    print("associations Completed") # troubleshooting
+    out$LogPoi$preds<-computePredictedValues(out$LogPoi$bf)
+    print("preds Completed") # troubleshooting
+    out$LogPoi$MF<-evaluateModelFit(out$LogPoi$bf, predY=out$LogPoi$preds)
+    print("model fit Completed") # troubleshooting
+    out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2,3,4), groupnames=c("City", "Land-use", "pH", "OM"))
+    out$LogPoi$postBeta<-getPostEstimate(out$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+    out
+  }
+  
+  out$REF<-run(Ydat=Ydat, XDat=XDat1, XFormula=XFormula1, studyDesign=studyDesign)
+  out
+}
+
+runGLHMSC<-function(list){
+  out<-sapply(list, applyGLHMSC, simplify=F, USE.NAMES = T)
+  out
+}
+
+GLU.out<-run.GLHMSC(GLU)
+saveRDS(GLU.out, "GLUSEEN_Anchoring.RDS")
+
+# GAD ####
+
+GAD.bac<-readRDS("")
+GAD.Fun<-readRDS("")
+sample_data(GAD.bac)$SeqDepth<-sample_sums(GAD.bac)
+sample_data(GAD.Fun)$SeqDepth<-sample_sums(GAD.Fun)
+
+GAD.QScale<-function(ps, type){
+  
+  if(type=="B"){
+    scale<-as.numeric(as.character(sample_data(ps)$Bac_QPCR))
+    out<-Qscale(ps, val=1, scale)
+  }
+  if(type=="F"){
+    scale<-as.numeric(as.character(sample_data(ps)$Fun_QPCR))
+    out<-Qscale(ps, val=1, scale)
+  }
+  out
+}
+GAD.Qscale<-function(ps, val, scale){
+  scaled<-data.frame(mapply(`*`, data.frame(t(as.matrix(otu_table(transform_sample_counts(ps, function(x) x/sum(x)))))), scale * val))# sample_data(ps)$val))
+  names<-rownames(data.frame(t(as.matrix(otu_table(ps)))))
+  rownames(scaled)<-names
+  scaled<-round(scaled)
+  
+  p2<-ps
+  otu_table(p2)<- otu_table(scaled, taxa_are_rows=T)
+  p2
+  
+}
+fGA.Q<-GAD.QScale(GAD.Fun,type="F")
+bGA.Q<-GAD.QScale(GAD.bac,type="B")
+
+fGA.RA<-transform_sample_counts(GAD.Fun, function(x) x/sum(x))
+bGA.RA<-transform_sample_counts(GAD.bac, function(x) x/sum(x))
+
+GAD<-list(bGA.Q, bGA.RA, GAD.bac, fGA.Q, fGA.RA, GAD.Fun)
+
+applyGAHMSC<-function(ps){
+  out<-NULL
+  
+  Ydat<-as.data.frame(as.matrix(otu_table(ps)))
+  XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
+  XDat1<-XData[,-c(4, 5, 6)] # subset data to what I need for this run!!
+  rownames(XDat1)<-c(1:nrow(XDat1))
+  XDat1$pH<-as.numeric(as.character(XDat1$pH))
+  XDat1$C_percent<-as.numeric(as.character(XDat1$C_percent))
+  XDat1$C_N_ratio<-as.numeric(as.character(XDat1$C_N_ratio))
+  XDat1$B.Density_gcm3<-as.numeric(as.character(XDat1$B.Density_gcm3))
+  XDat1$Sand_percent<-as.numeric(as.character(XDat1$Sand_percent))
+  XDat1$Silt_percent<-as.numeric(as.character(XDat1$Silt_percent))
+  XDat1$Clay_percent<-as.numeric(as.character(XDat1$Clay_percent))
+  XDat1$No3_ugPerg<-as.numeric(as.character(XDat1$No3_ugPerg))
+  XDat1$Nh4_ugPerg<-as.numeric(as.character(XDat1$Nh4_ugPerg))
+
+  XFormula1= ~ Treatment + Depth + B.Density_gcm3 + Sand_percent + Silt_percent + Clay_percent + pH + C_percent + C_N_ratio   + No3_ugPerg + Nh4_ugPerg 
+  XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
+  studyDesign = data.frame("Sample"=XDat1$Sample)
+  run<-function(Ydat, XDat, XFormula, studyDesign){
+    out<-NULL
+    out$probit<-NULL
+    out$LogPoi<-NULL
+    rL1 <- HmscRandomLevel(units=studyDesign$Sample)
+    bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit")
+    out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    
+    # examine correlation matrix for probit model
+    # get outputs for HMSC analysis
+    out$probit$OmegaCor.probit=computeAssociations(out$probit$bf)
+    out$probit$preds<-computePredictedValues(out$probit$bf)
+    out$probit$MF<-evaluateModelFit(out$probit$bf, predY=out$probit$preds)
+    out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,1,2,2,2,2,3,3,3), groupnames=c("Treatment", "Physical", "Chemical")) 
+    out$probit$postBeta<-getPostEstimate(out$probit$bf, parName="Beta") 
+    
+    Y2<-as.matrix(Ydat) # global OTU table
+    Y2[Y2==0]<-NA # remove zero counts
+    out$LogPoi$bf<-Hmsc(Y=Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="poisson") # use same formulas as previous
+    out$LogPoi$bf<-sampleMcmc(out$LogPoi$bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    print("bf Completed") # troubleshooting
+    out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoi$bf)
+    print("associations Completed") # troubleshooting
+    out$LogPoi$preds<-computePredictedValues(out$LogPoi$bf)
+    print("preds Completed") # troubleshooting
+    out$LogPoi$MF<-evaluateModelFit(out$LogPoi$bf, predY=out$LogPoi$preds)
+    print("model fit Completed") # troubleshooting
+    out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,1,2,2,2,2,3,3,3), groupnames=c("Treatment", "Physical", "Chemical"))
+    out$LogPoi$postBeta<-getPostEstimate(out$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+    out
+  }
+  
+  out$REF<-run(Ydat=Ydat, XDat=XDat1, XFormula=XFormula1, studyDesign=studyDesign)
+  out
+}
+
+runGAHMSC<-function(list){
+  out<-sapply(list, applyGAHMSC, simplify=F, USE.NAMES = T)
+  out
+}
+# BJUREN ####
+
+
+
+# PHP
+
+
+
+# Anchoring Study PHP
+tdat$PLFA.Gram.Negative<-as.numeric(as.character(tdat$PLFA.Gram.Negative))
+tdat$PLFA.Gram.Positive<-as.numeric(as.character(tdat$PLFA.Gram.Positive))
+tdat$NLFA.Gram.Negative<-as.numeric(as.character(tdat$NLFA.Gram.Negative))
+tdat$NLFA.Gram.Positive<-as.numeric(as.character(tdat$NLFA.Gram.Positive))
+tdat$NLFA.Tbac<-as.numeric(as.character(tdat$NLFA.Tbac))
+tdat$PLFA.Tbac<-as.numeric(as.character(tdat$PLFA.Tbac))
+tdat$Quantity..picograms.<-as.numeric(as.character(tdat$Quantity..picograms.))
+tdat$NLFAT
+plot(tdat$NLFA.Tbac~tdat$PLFA.Tbac)
+plot(tdat$NLFA.Tbac~tdat$Quantity..picograms.)
+plot(tdat$PLFA.Tbac~tdat$Quantity..picograms.)
 
 # QC data:
 # Filter to sites with QPCR, PH, OM, NFLA, PLFA
@@ -161,6 +404,8 @@ Belt<-merge_phyloseq(Belt, sample_data(B.meta))
 
 b.RH<-readRDS("Data/BacterialRhizospherePhyloseq18112020.rds")
 
+View(as.data.frame(as.matrix(sample_data(b.RH))))
+
 ARH<-subset_samples(b.RH, year=="2013" & soil_zone=="rhizosphere")
 # subset taxa to exclude mitochondria etc; and ...
 zz<-
@@ -229,67 +474,55 @@ saveRDS(fb.RH, "Data/fb_Rhizosphere_2020.RDS")
 
 # HMSC work !!!!
 
+# PHP model
 fb.RH<-tax_glom(fb.RH, taxrank="Genus")
-
-applyHMSC.A<-function(ps){
-  out<-NULL
   
   Ydat<-as.data.frame(as.matrix(otu_table(ps)))
   XData<-as.data.frame(as.matrix(sample_data(ps)), stringsAsFactors = TRUE)
   XDat1<-XData[,c(2,3,6,8:10,15,47,75,81)] # subset data to what I need for this run!!
   rownames(XDat1)<-c(1:nrow(XDat1))
-  
-  # continue as usual:
-  XFormula1= ~Glyphosphate_Treatment # consider genotype later crop not necessary, metadata not necessary ~Glyphosphate_Treatment + genotype + pH + OM...
-  
-  XFormula2= ~Glyphosphate_Treatment + NLFA.AM.Fungi # crop not necessary
-  
+  XFormula= ~Glyphosphate_Treatment + genotype + System.loc + crop + pH + OM... # consider genotype 
   XDat1$Sample<-as.factor(c(1:nrow(XDat1)))
-  studyDesign = data.frame("Sample"=XDat1$Sample,"Sampling_date"=XDat1$Sampling_date)#, "year"=XDat1$year)
+  studyDesign = data.frame("Sample"=XDat1$Sample,"Sampling_date"=XDat1$Sampling_date, "Depth"=XDat1$depth)#
   
-  #rL3 <- HmscRandomLevel(units=studyDesign$year)
-  # first do probit model ####
-  #old<-Sys.time()
-  run<-function(Ydat, XDat, XFormula, studyDesign, AM){
-    out<-NULL
-    out$probit<-NULL
-    out$LogPoi<-NULL
+    PHP<-NULL
+    PHP$probit<-NULL
+    PHP$LogPoi<-NULL
     rL1 <- HmscRandomLevel(units=studyDesign$Sample)
     rL2 <- HmscRandomLevel(units=studyDesign$Sampling_date) # set random level to loc_plot_ID
+    rL3 <- HmscRandomLevel(units=studyDesign$depth)
     bf<-Hmsc(Y=as.matrix(Ydat), XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="probit")#, "year"=rL3), distr="probit") 
-    out$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+    PHP$probit$bf<-sampleMcmc(bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
     
     # examine correlation matrix for probit model
-    # get outputs for HMSC analysis
-    out$probit$OmegaCor.probit=computeAssociations(out$probit$bf)
-    print("probit1")
-    out$probit$preds<-computePredictedValues(out$probit$bf)
-    print("preds1")
-    out$probit$MF<-evaluateModelFit(out$probit$bf, predY=out$probit$preds)
-    print("MF1")
-    print(out$probit$bf$X)
-    if(AM==0){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1), groupnames=c("Glyphosate"))} # removed last 3 from vector so that random accounts for removing the year from the model, and remove 1 from expt to account for removing crop from the model
-    if(AM==1){out$probit$VP<-computeVariancePartitioning(out$probit$bf, group=c(1,1,2), groupnames=c("Glyphosate", "AMF"))}
-    
-    out$probit$postBeta<-getPostEstimate(out$probit$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+    # get PHPputs for HMSC analysis
+    PHP$probit$OmegaCor.probit=computeAssociations(PHP$probit$bf)
+
+    PHP$probit$preds<-computePredictedValues(PHP$probit$bf)
+
+    PHP$probit$MF<-evaluateModelFit(PHP$probit$bf, predY=PHP$probit$preds)
+  
+    print(PHP$probit$bf$X)
+    PHP$probit$VP<-computeVariancePartitioning(PHP$probit$bf, group=c(1,1), groupnames=c("Glyphosate"))
+    PHP$probit$postBeta<-getPostEstimate(PHP$probit$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
     
     Y2<-as.matrix(Ydat) # global OTU table
     Y2[Y2==0]<-NA # remove zero counts
-    out$LogPoi$bf<-Hmsc(Y=Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="poisson") # use same formulas as previous
-    out$LogPoi$bf<-sampleMcmc(out$LogPoi$bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
-    print("bf Completed") # troubleshooting
-    out$LogPoi$OmegaCor.lp=computeAssociations(out$LogPoi$bf)
-    print("associations Completed") # troubleshooting
-    out$LogPoi$preds<-computePredictedValues(out$LogPoi$bf)
-    print("preds Completed") # troubleshooting
-    out$LogPoi$MF<-evaluateModelFit(out$LogPoi$bf, predY=out$LogPoi$preds)
-    print("model fit Completed") # troubleshooting
-    if(AM==0){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1), groupnames=c("Glyphosate"))}
-    if(AM==1){out$LogPoi$VP<-computeVariancePartitioning(out$LogPoi$bf, group=c(1,1,2), groupnames=c("Glyphosate", "AMF"))}
-    print("VP Completed") # troubleshooting
-    out$LogPoi$postBeta<-getPostEstimate(out$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
-    print("Completed")
-    out
+    PHP$LogPoi$bf<-Hmsc(Y=Y2, XData=XDat1, XFormula=XFormula, studyDesign=studyDesign, ranLevels=list("Sample"=rL1, "Sampling_date"=rL2), distr="poisson") # use same formulas as previous
+    PHP$LogPoi$bf<-sampleMcmc(PHP$LogPoi$bf, thin=2, samples=1000, transient=500, nChains=1, nParallel=1, verbose=100)
+
+    PHP$LogPoi$OmegaCor.lp=computeAssociations(PHP$LogPoi$bf)
+
+    PHP$LogPoi$preds<-computePredictedValues(PHP$LogPoi$bf)
+
+    PHP$LogPoi$MF<-evaluateModelFit(PHP$LogPoi$bf, predY=PHP$LogPoi$preds)
+
+    if(AM==0){PHP$LogPoi$VP<-computeVariancePartitioning(PHP$LogPoi$bf, group=c(1,1), groupnames=c("Glyphosate"))}
+    if(AM==1){PHP$LogPoi$VP<-computeVariancePartitioning(PHP$LogPoi$bf, group=c(1,1,2), groupnames=c("Glyphosate", "AMF"))}
+
+    PHP$LogPoi$postBeta<-getPostEstimate(PHP$LogPoi$bf, parName="Beta") #beta is species abundance ; gamma is traits; rho is phylogenetic signal
+
+    PHP
   }
   
   out$REF<-run(Ydat=Ydat, XDat=XDat1, XFormula=XFormula1, studyDesign=studyDesign, AM=0)

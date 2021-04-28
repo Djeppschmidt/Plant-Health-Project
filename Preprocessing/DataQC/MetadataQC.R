@@ -1,9 +1,12 @@
 # reconcile metadata
+
+
 library(dplyr)
 library(plyr)
 PLFA<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/Hmsc_reproducible/PLFA.csv")) # from excel sheets provided by Jude Maul
 Chem<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/key.csv")) # sheet labeled key
 CFU<-as.data.frame(read.csv("/Users/dietrich/Desktop/PhD/PHP/CFU.csv"))
+bac<-readRDS("/Users/dietrich/Desktop/PhD/PHP/bacarc_RAWcomDat.rds")
 meta<-as.data.frame(as.matrix(sample_data(bac))) # from workflow output on scinet (prepared by Ryan?)
 
 # need to build out unique analyses for each because of dataset structure?
@@ -73,7 +76,7 @@ PLFA$system.ID[PLFA$system.ID=="Org 3"]<-"Org_3"
 PLFA$Bl.Rh[PLFA$Bl.Rh==""]<-NA
 
 # extract PLFA markers
-NLFA<-NLFA[NLFA$MarkerType=="nlfa",]
+NLFA<-PLFA[PLFA$MarkerType=="nlfa",]
 NLFA2013<-NLFA[NLFA$year==2013,]
 NLFA2014<-NLFA[NLFA$year==2014,]
 
@@ -94,7 +97,7 @@ meta2014$Merge<-paste0(meta2014$Loc_plot_ID, meta2014$Glyphosphate_Treatment, me
 m.PLFA2013<-merge(meta2013, PLFA2013, by="Merge", all.x=TRUE)
 m.PLFA2014<-merge(meta2014, PLFA2014, by="Merge", all.x=TRUE)
 
-PLFA2<-rbind(m.PLFA2013,m.PLFA2014)
+PLFA2<-rbind(m.PLFA2013,m.PLFA2014) # what if plfa and nlfa for 2013 is bad?
 colnames(PLFA2)
 PLFA2<-PLFA2[,c(2,5:15,20,39,42,52:60)]
 names(PLFA2)[17]<-"PLFA.General.FAME"
@@ -183,11 +186,13 @@ meta2014<-merge(meta2014, Chem2014, by.x="Loc_plot_ID", by.y="Plot.number")
 
 Chem$MergeC<-paste0(Chem$Plot.number, Chem$Glyphosphate_Treatment, Chem$system, Chem$Microplot.treatment, Chem$crop,sep="")
 #Chem$Merge2014<-paste0(Chem$Plot.number, Chem$Glyphosphate_Treatment, Chem$system, Chem$Microplot.treatment,sep="")
-meta$MergeC<-paste0(meta$Loc_plot_ID, meta$Glyphosphate_Treatment, meta$System.loc, meta$genotype, meta$crop, sep="")
+meta2013$MergeC<-paste0(meta2013$Loc_plot_ID, meta2013$Glyphosphate_Treatment, meta2013$System.loc, meta2013$genotype, meta2013$crop, sep="")
 
 setdiff(Chem$MergeC, meta2013$MergeC) # should be = 0
+setdiff(Chem$MergeC, meta$MergeC)
 
-Chem2<-merge(meta2013, Chem, by="MergeC", all.x=TRUE)
+RH.Chem2<-merge(meta2013, Chem, by="MergeC", all.x=TRUE)
+
 RH.Chem3<-bind_rows(RH.Chem2, meta2014)
 RH.Chem3<-RH.Chem3[RH.Chem3$Soil_Zone=="rhizosphere",]
 

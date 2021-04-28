@@ -302,7 +302,10 @@ applyHMSC<-function(ps){
   out$ps<-ps
   out
 }
-
+runHMSC<-function(list){
+  out<-sapply(list, applyHMSC, simplify=F, USE.NAMES = T)
+  out
+}
 CTc<-runHMSC(list.CTc)
 CTs<-runHMSC(list.CTs)
 NTc<-runHMSC(list.NTc)
